@@ -35,6 +35,31 @@ function initialsFor(nameOrEmail) {
   return (parts[0].slice(0, 1) + parts[parts.length - 1].slice(0, 1)).toUpperCase();
 }
 
+/**
+ * PUBLIC_INTERFACE
+ * Basic avatar URL validation:
+ * - empty is allowed (means "no avatar")
+ * - must be a valid http(s) URL
+ * - or a data:image/* base64 URL (for local previews)
+ */
+function validateAvatarUrl(input) {
+  const v = safeTrim(input);
+  if (!v) return { ok: true, value: "" };
+
+  // Allow local preview data URLs so the app stays responsive even before upload.
+  if (/^data:image\/[a-z0-9.+-]+;base64,/i.test(v)) return { ok: true, value: v };
+
+  try {
+    const u = new URL(v);
+    if (u.protocol !== "http:" && u.protocol !== "https:") {
+      return { ok: false, message: "Avatar URL must start with http:// or https:// (or be a data:image/* URL)." };
+    }
+    return { ok: true, value: u.toString() };
+  } catch {
+    return { ok: false, message: "Please enter a valid URL (http/https) or leave it blank." };
+  }
+}
+
 // PUBLIC_INTERFACE
 export default function ProfilePage() {
   /** Profile page: Supabase-backed fields (full name, phone, avatar) with immediate topbar refresh via Preferences context. */
@@ -50,8 +75,12 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
 
+  // What we show as the current avatar preview (can be a public URL, a pasted URL, or a data URL preview).
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(profile?.avatarUrl || "");
   const [pickedAvatarFile, setPickedAvatarFile] = useState(null);
+
+  // Explicit UI warning banner that is non-blocking (separate from status chip).
+  const [warningBanner, setWarningBanner] = useState("");
 
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState({ tone: "primary", text: "" });
@@ -80,6 +109,7 @@ export default function ProfilePage() {
           setPhone(profile?.phone || "");
           setAvatarPreviewUrl(profile?.avatarUrl || "");
           setLoadingProfile(false);
+          setWarningBanner("Supabase is not configured. Storage uploads are unavailable; use the Avatar URL fallback.");
           setStatus({
             tone: "warn",
             text: "Supabase is not configured. Profile edits will be stored locally (demo mode).",
@@ -95,6 +125,7 @@ export default function ProfilePage() {
 
       if (!res.ok) {
         setLoadingProfile(false);
+        setWarningBanner("Could not load profile from Supabase. You can still edit and try saving.");
         setStatus({
           tone: "warn",
           text: "Could not load profile from Supabase. You can still edit and try saving.",
@@ -123,6 +154,7 @@ export default function ProfilePage() {
       }));
 
       setLoadingProfile(false);
+      setWarningBanner("");
       setStatus({ tone: "primary", text: "" });
     })();
 
@@ -164,11 +196,12 @@ export default function ProfilePage() {
     setPickedAvatarFile(file);
 
     // Prefer a fast preview even before upload.
+    // Important: do NOT update the Topbar with a data URL yet; only update it once we have a stable saved URL.
+    // Otherwise, if upload fails and user closes the page, the topbar would show a temporary preview.
     try {
       const dataUrl = await fileToDataUrl(file);
       setAvatarPreviewUrl(dataUrl);
-      // Also update topbar immediately to reflect selection (even before saving).
-      setProfile((p) => ({ ...p, avatarUrl: dataUrl }));
+      setWarningBanner("");
       setStatus({ tone: "primary", text: "" });
     } catch (e) {
       setErr(e?.message || "Failed to read image file.");
@@ -178,6 +211,7 @@ export default function ProfilePage() {
   const onRemoveAvatar = () => {
     setPickedAvatarFile(null);
     setAvatarPreviewUrl("");
+    setWarningBanner("");
     setProfile((p) => ({ ...p, avatarUrl: "" }));
     setStatus({ tone: "primary", text: "" });
   };
@@ -191,33 +225,54 @@ export default function ProfilePage() {
     const nameTrim = safeTrim(fullName);
     const phoneTrim = safeTrim(phone);
 
+    // Validate avatar URL before persisting; empty is allowed.
+    const avatarValidation = validateAvatarUrl(avatarPreviewUrl);
+    if (!avatarValidation.ok) {
+      setErr(avatarValidation.message);
+      setSaving(false);
+      return;
+    }
+
     try {
       // Demo-mode: just persist to local context/storage and return.
       if (!supabaseConfigured) {
+        const urlToPersist = avatarValidation.value || "";
         setProfile((p) => ({
           ...p,
           email: email || p.email,
           name: nameTrim || p.name,
           phone: phoneTrim,
-          avatarUrl: avatarPreviewUrl || p.avatarUrl,
+          avatarUrl: urlToPersist,
         }));
         setOk("Saved locally (demo mode).");
         return;
       }
 
-      let avatarUrlToSave = null;
+      let avatarUrlToSave = avatarValidation.value ? avatarValidation.value : null;
 
       // 1) upload avatar (if picked)
       if (pickedAvatarFile) {
-        const up = await uploadAvatar(userId, pickedAvatarFile);
-        if (!up.ok) {
-          // Storage fallback: keep current preview and allow user to paste a URL manually (optional input below).
-          setWarn(
-            `Avatar upload failed (Storage may be unavailable or blocked by policy). You can still save name/phone. Details: ${up.error?.message || "unknown"}`
+        try {
+          const up = await uploadAvatar(userId, pickedAvatarFile);
+          if (!up.ok) {
+            // Storage fallback: allow URL input + persist avatar_url from the URL (or clear).
+            setWarningBanner(
+              `Avatar upload failed (Storage may be unavailable or blocked by policy). You can paste an image URL below and Save. Details: ${
+                up.error?.message || "unknown"
+              }`
+            );
+            setWarn("Avatar upload failed; you can still save using the Avatar URL fallback.");
+          } else {
+            avatarUrlToSave = up.publicUrl;
+            setAvatarPreviewUrl(up.publicUrl);
+            setWarningBanner("");
+          }
+        } catch (e) {
+          // Defensive: supabase client/bucket missing could throw in some edge cases.
+          setWarningBanner(
+            `Avatar upload is unavailable right now. You can paste an image URL below and Save. Details: ${e?.message || "unknown"}`
           );
-        } else {
-          avatarUrlToSave = up.publicUrl;
-          setAvatarPreviewUrl(up.publicUrl);
+          setWarn("Avatar upload unavailable; you can still save using the Avatar URL fallback.");
         }
       }
 
@@ -225,14 +280,14 @@ export default function ProfilePage() {
       const upsert = await upsertProfile(userId, {
         full_name: nameTrim || null,
         phone: phoneTrim || null,
-        avatar_url: avatarUrlToSave ?? (avatarPreviewUrl ? avatarPreviewUrl : null),
+        avatar_url: avatarUrlToSave,
       });
 
       if (!upsert.ok) {
         throw upsert.error;
       }
 
-      // 3) refresh global context so Topbar updates immediately.
+      // 3) refresh global context so Topbar updates immediately with the persisted avatar.
       const row = upsert.profile;
       const mapped = mapSupabaseProfileToLocal({ ...row, email });
 
@@ -241,7 +296,7 @@ export default function ProfilePage() {
         email: email || p.email,
         name: mapped.name || p.name,
         phone: mapped.phone,
-        avatarUrl: mapped.avatarUrl || p.avatarUrl,
+        avatarUrl: mapped.avatarUrl || "",
       }));
 
       setPickedAvatarFile(null);
@@ -272,6 +327,39 @@ export default function ProfilePage() {
           caption="Full name & phone are editable. Email is read-only."
           right={status?.text ? <Chip tone={status.tone}>{status.text}</Chip> : null}
         >
+          {warningBanner ? (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                marginBottom: 12,
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid rgba(245, 158, 11, 0.35)",
+                background: "linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(244, 114, 182, 0.08))",
+                color: "var(--ss-text)",
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 12, letterSpacing: 0.2, marginBottom: 2 }}>Heads up</div>
+                <div style={{ fontSize: 13, opacity: 0.9 }}>{warningBanner}</div>
+              </div>
+              <button
+                type="button"
+                className="ss-btn ss-btn-ghost"
+                onClick={() => setWarningBanner("")}
+                aria-label="Dismiss warning"
+                style={{ padding: "6px 10px", height: "fit-content" }}
+              >
+                Dismiss
+              </button>
+            </div>
+          ) : null}
+
           <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
             <div aria-label="Avatar preview" style={avatarStyle}>
               {!avatarPreviewUrl ? <span aria-hidden="true">{initials}</span> : null}
@@ -345,7 +433,10 @@ export default function ProfilePage() {
           ) : null}
         </Card>
 
-        <Card title="Avatar URL (fallback)" caption="If Storage upload is blocked/unavailable, you can paste a URL.">
+        <Card
+          title="Avatar URL (fallback)"
+          caption="If Storage upload is blocked/unavailable, you can paste a URL. This will be saved into profiles.avatar_url."
+        >
           <label className="ss-muted" style={{ fontSize: 12, display: "block" }}>
             Avatar URL
             <input
@@ -354,9 +445,9 @@ export default function ProfilePage() {
               onChange={(e) => {
                 const v = e.target.value;
                 setAvatarPreviewUrl(v);
+                // If user starts typing a URL, they are explicitly choosing the URL path.
                 setPickedAvatarFile(null);
-                // Immediate topbar update when user pastes URL
-                setProfile((p) => ({ ...p, avatarUrl: v }));
+                setWarningBanner("");
               }}
               aria-label="Avatar URL"
               placeholder="https://…"
@@ -366,9 +457,12 @@ export default function ProfilePage() {
 
           <div className="ss-divider" />
 
+          <p className="ss-card-caption" style={{ marginBottom: 0 }}>
+            Accepted formats: <code>https://…</code> (recommended) or <code>http://…</code>. You can also leave it blank to clear your avatar.
+          </p>
           <p className="ss-card-caption">
-            Storage bucket: <code>avatars</code>. Expected path format: <code>avatars/{`{userId}`}/{`{timestamp}`}.png</code>.
-            Ensure Storage policies allow authenticated users to upload/read their own folder.
+            Storage bucket: <code>avatars</code>. Expected path format: <code>avatars/{`{userId}`}/{`{timestamp}`}.png</code>. Ensure Storage
+            policies allow authenticated users to upload/read their own folder.
           </p>
         </Card>
       </div>
