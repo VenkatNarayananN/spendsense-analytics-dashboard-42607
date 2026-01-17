@@ -13,16 +13,48 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+/**
+ * Env wiring:
+ * - CRA exposes only REACT_APP_* at build time.
+ * - We still support common fallback names to reduce misconfig friction in other environments.
+ */
 /** @type {string | undefined} */
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
 /** @type {string | undefined} */
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_KEY;
+const supabaseAnonKey =
+  process.env.REACT_APP_SUPABASE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
 
 /**
  * Whether Supabase is configured via environment variables.
  * @type {boolean}
  */
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+/**
+ * PUBLIC_INTERFACE
+ * Returns a safe snapshot of the current Supabase env wiring for debugging UI.
+ *
+ * IMPORTANT: This intentionally does NOT return full keys; only the last 6 chars.
+ *
+ * @returns {{configured:boolean,urlPresent:boolean,keyPresent:boolean,urlValue:string,keySuffix:string}}
+ */
+export function getSupabaseDiagnostics() {
+  const urlPresent = Boolean(supabaseUrl);
+  const keyPresent = Boolean(supabaseAnonKey);
+
+  /** @type {string} */
+  const urlValue = supabaseUrl || '';
+  /** @type {string} */
+  const keySuffix = supabaseAnonKey ? String(supabaseAnonKey).slice(-6) : '';
+
+  return {
+    configured: Boolean(urlPresent && keyPresent),
+    urlPresent,
+    keyPresent,
+    urlValue,
+    keySuffix,
+  };
+}
 
 /**
  * PUBLIC_INTERFACE

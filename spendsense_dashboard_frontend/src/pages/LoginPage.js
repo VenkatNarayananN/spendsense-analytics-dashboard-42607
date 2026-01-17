@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button, Card, Chip } from "../components/ui";
 import { useAuth } from "../auth/AuthProvider";
-import { isSupabaseConfiguredFn } from "../lib/supabaseClient";
+import { getSupabaseDiagnostics, isSupabaseConfiguredFn } from "../lib/supabaseClient";
 import Logo from "../components/Logo";
 
 function isValidEmail(email) {
@@ -17,6 +17,19 @@ export default function LoginPage() {
   const loc = useLocation();
 
   const supabaseConfigured = isSupabaseConfiguredFn();
+  const supabaseDiag = useMemo(() => getSupabaseDiagnostics(), []);
+
+  // Small runtime diagnostic for debugging env wiring issues (safe: no full key exposure).
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.info("[login] Supabase diagnostics:", {
+      configured: supabaseDiag.configured,
+      urlPresent: supabaseDiag.urlPresent,
+      keyPresent: supabaseDiag.keyPresent,
+      urlValue: supabaseDiag.urlValue,
+      keySuffix: supabaseDiag.keySuffix ? `…${supabaseDiag.keySuffix}` : "",
+    });
+  }, [supabaseDiag]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -103,9 +116,45 @@ export default function LoginPage() {
 
         <div className="ss-grid ss-grid-2" style={{ alignItems: "start" }}>
           <Card title="Sign in" caption="Use your Supabase email + password credentials.">
+            <div
+              className="ss-card-caption"
+              style={{
+                border: "1px solid rgba(244, 114, 182, 0.35)",
+                background: "linear-gradient(135deg, rgba(244, 114, 182, 0.10), rgba(245, 158, 11, 0.08))",
+                padding: 10,
+                borderRadius: 12,
+                marginBottom: 10,
+              }}
+            >
+              <div className="ss-muted" style={{ fontSize: 12, marginBottom: 6 }}>
+                Runtime diagnostics
+              </div>
+              <div style={{ display: "grid", gap: 4, fontSize: 12 }}>
+                <div>
+                  <strong>Supabase configured:</strong> {supabaseDiag.configured ? "yes" : "no"}
+                </div>
+                <div>
+                  <strong>URL present:</strong> {supabaseDiag.urlPresent ? "yes" : "no"}{" "}
+                  {supabaseDiag.urlPresent ? (
+                    <span className="ss-muted" style={{ marginLeft: 6 }}>
+                      ({supabaseDiag.urlValue})
+                    </span>
+                  ) : null}
+                </div>
+                <div>
+                  <strong>Key present:</strong> {supabaseDiag.keyPresent ? "yes" : "no"}{" "}
+                  {supabaseDiag.keyPresent ? (
+                    <span className="ss-muted" style={{ marginLeft: 6 }}>
+                      (…{supabaseDiag.keySuffix})
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
             {!supabaseConfigured ? (
               <div className="ss-card-caption" style={{ color: "var(--ss-error)" }}>
-                Supabase is not configured. This app requires an authenticated Supabase session. Demo/mock sign-in has been removed.
+                Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY (or fallbacks) to enable sign-in.
               </div>
             ) : null}
 
