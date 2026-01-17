@@ -21,7 +21,9 @@ function safeReadTheme() {
 
 function applyThemeToDom(theme) {
   if (typeof document === "undefined") return;
+  // Keep both attributes in sync so any CSS can target either selector.
   document.documentElement.setAttribute("data-ss-theme", theme);
+  document.documentElement.setAttribute("data-theme", theme);
 }
 
 // PUBLIC_INTERFACE

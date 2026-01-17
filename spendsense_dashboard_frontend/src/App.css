@@ -1,7 +1,9 @@
 :root {
-  /* SpendSense — Ocean Professional Theme (Deep ocean blues + teal accents, cool neutrals)
-     Theme change note (maintainers): Replaces prior fintech cyan/indigo styling with ocean gradient tokens and
-     ensures components consume CSS variables for consistent palette usage across the app shell and UI primitives. */
+  /* SpendSense — Rose Gold Elegant Theme (soft rose + warm gold + subtle lilac)
+     Theme change note (maintainers):
+     - Centralizes the entire palette + gradients into CSS variables.
+     - All app surfaces (cards, tables, inputs, nav) should consume variables so toggling theme
+       via [data-ss-theme] / [data-theme] propagates everywhere consistently. */
 
   /* Theme mode (managed by ThemeProvider via [data-ss-theme]) */
   --ss-theme: dark;
@@ -11,67 +13,68 @@
    * Define defaults on :root, override via [data-theme="light"] and [data-theme="dark"].
    * Components should prefer these for backgrounds/surfaces/text/borders.
    */
-  --ss-background: #0b1220;
-  --ss-card-bg: rgba(17, 24, 39, 0.70);
-  --ss-text-primary: #e5e7eb;
-  --ss-text-secondary: #94a3b8;
-  --ss-border-color: rgba(148, 163, 184, 0.18);
+  --ss-background: #120a12; /* deep plum */
+  --ss-card-bg: rgba(28, 15, 28, 0.72);
+  --ss-text-primary: rgba(255, 255, 255, 0.92);
+  --ss-text-secondary: rgba(255, 255, 255, 0.70);
+  --ss-border-color: rgba(244, 114, 182, 0.22);
 
-  /* Brand */
-  --ss-primary: #0b63c5; /* ocean blue */
-  --ss-primary-2: #0e4d92; /* deep ocean blue */
-  --ss-secondary: #00a3bf; /* teal/cyan accent */
+  /* Brand (rose gold) */
+  --ss-primary: #f472b6; /* rose */
+  --ss-primary-2: #ec4899; /* deeper rose */
+  --ss-secondary: #f59e0b; /* warm gold */
 
   /* Status */
-  --ss-success: #16a34a;
+  --ss-success: #10b981;
   --ss-warn: #f59e0b;
   --ss-error: #ef4444;
 
   /* Compatibility tokens (some components/pages may use older names) */
   --ss-danger: var(--ss-error);
 
-  /* Neutrals / surfaces (cool grays) - map to centralized vars */
+  /* Neutrals / surfaces - map to centralized vars */
   --ss-bg: var(--ss-background); /* app background */
-  --ss-surface-900: #0f172a;
-  --ss-surface-800: #111827;
-  --ss-surface-700: #1f2937;
+  --ss-surface-900: #160d18;
+  --ss-surface-800: #1b0f1d;
+  --ss-surface-700: #231225;
 
   --ss-surface: var(--ss-surface-900);
   --ss-surface-2: var(--ss-surface-800);
-  --ss-surface-3: rgba(255, 255, 255, 0.03); /* subtle overlay */
+  --ss-surface-3: rgba(255, 255, 255, 0.04); /* subtle overlay */
 
   /* Text - map to centralized vars */
-  --ss-text: var(--ss-text-primary); /* slate-200 */
+  --ss-text: var(--ss-text-primary);
   --ss-text-strong: #ffffff;
-  --ss-muted: var(--ss-text-secondary); /* slate-400 */
+  --ss-muted: var(--ss-text-secondary);
 
   /* Borders + shadows - map to centralized vars */
   --ss-border: var(--ss-border-color);
-  --ss-border-strong: rgba(148, 163, 184, 0.28);
+  --ss-border-strong: rgba(245, 158, 11, 0.22);
 
   --ss-radius-lg: 14px;
   --ss-radius-md: 12px;
   --ss-radius-sm: 10px;
 
-  --ss-shadow-sm: 0 1px 1px rgba(2, 6, 23, 0.35), 0 1px 2px rgba(2, 6, 23, 0.28);
-  --ss-shadow-md: 0 10px 24px rgba(2, 6, 23, 0.45);
-  --ss-shadow-lg: 0 18px 48px rgba(2, 6, 23, 0.55);
+  --ss-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --ss-shadow-md: 0 10px 26px rgba(0, 0, 0, 0.52);
+  --ss-shadow-lg: 0 18px 52px rgba(0, 0, 0, 0.62);
 
-  /* Gradients */
-  --ss-gradient-shell: linear-gradient(135deg, rgba(14, 77, 146, 0.9), rgba(11, 99, 197, 0.9));
-  --ss-gradient-surface: radial-gradient(900px 520px at 12% -8%, rgba(0, 163, 191, 0.14), transparent 60%),
-    radial-gradient(760px 420px at 92% 10%, rgba(11, 99, 197, 0.14), transparent 60%),
-    linear-gradient(180deg, #0b1220 0%, #0b1220 100%);
+  /* Gradients (match screenshots: blush/pink glow over very soft warm background) */
+  --ss-gradient-shell: linear-gradient(90deg, rgba(244, 114, 182, 0.28), rgba(245, 158, 11, 0.20));
+  --ss-gradient-surface: radial-gradient(900px 540px at 15% -10%, rgba(244, 114, 182, 0.30), transparent 60%),
+    radial-gradient(820px 520px at 92% 8%, rgba(245, 158, 11, 0.22), transparent 58%),
+    radial-gradient(780px 520px at 55% 105%, rgba(168, 85, 247, 0.14), transparent 60%),
+    linear-gradient(180deg, var(--ss-background) 0%, var(--ss-background) 100%);
 
   /* Chart palette */
-  --ss-chart-line: var(--ss-secondary);
-  --ss-chart-accent: var(--ss-primary);
-  --ss-chart-grid: rgba(148, 163, 184, 0.18);
-  --ss-chart-label: rgba(229, 231, 235, 0.78);
+  --ss-chart-line: var(--ss-primary);
+  --ss-chart-accent: var(--ss-secondary);
+  --ss-chart-grid: rgba(244, 114, 182, 0.18);
+  --ss-chart-label: rgba(255, 255, 255, 0.72);
 
   /* Interaction */
-  --ss-focus: 0 0 0 4px rgba(0, 163, 191, 0.22);
-  --ss-focus-strong: 0 0 0 4px rgba(11, 99, 197, 0.22);
+  --ss-focus: 0 0 0 4px rgba(244, 114, 182, 0.22);
+  --ss-focus-strong: 0 0 0 4px rgba(245, 158, 11, 0.18);
 
   --ss-font: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
@@ -89,50 +92,51 @@
   --ss-space-5: 32px;
 }
 
-/* Light theme overrides (same ocean brand, brighter surfaces)
+/* Light theme overrides (match screenshots: warm white w/ blush+gold gradient wash)
    Note: ThemeProvider uses [data-ss-theme], but we also support [data-theme] per requirements. */
 :root[data-ss-theme="light"],
 :root[data-theme="light"] {
   --ss-theme: light;
 
   /* requested centralized variables */
-  --ss-background: #f6fbff;
-  --ss-card-bg: rgba(255, 255, 255, 0.78);
-  --ss-text-primary: #0f172a; /* slate-900 */
-  --ss-text-secondary: rgba(15, 23, 42, 0.66);
-  --ss-border-color: rgba(15, 23, 42, 0.10);
+  --ss-background: #fff7f5; /* warm, almost-white */
+  --ss-card-bg: rgba(255, 255, 255, 0.86);
+  --ss-text-primary: #2b2230; /* warm charcoal */
+  --ss-text-secondary: rgba(43, 34, 48, 0.66);
+  --ss-border-color: rgba(244, 114, 182, 0.18);
 
   /* existing tokens map to centralized vars */
   --ss-bg: var(--ss-background);
   --ss-surface-900: #ffffff;
-  --ss-surface-800: #f2f7ff;
-  --ss-surface-700: #eaf1ff;
+  --ss-surface-800: #fff1f6; /* blush tint */
+  --ss-surface-700: #ffe7f1;
 
   --ss-surface: var(--ss-surface-900);
   --ss-surface-2: var(--ss-surface-800);
-  --ss-surface-3: rgba(2, 6, 23, 0.03);
+  --ss-surface-3: rgba(17, 24, 39, 0.03);
 
   --ss-text: var(--ss-text-primary);
-  --ss-text-strong: #0b1220;
+  --ss-text-strong: #19121d;
   --ss-muted: var(--ss-text-secondary);
 
   --ss-border: var(--ss-border-color);
-  --ss-border-strong: rgba(15, 23, 42, 0.18);
+  --ss-border-strong: rgba(245, 158, 11, 0.22);
 
-  --ss-shadow-sm: 0 1px 1px rgba(15, 23, 42, 0.10), 0 1px 2px rgba(15, 23, 42, 0.08);
-  --ss-shadow-md: 0 10px 24px rgba(15, 23, 42, 0.12);
-  --ss-shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.16);
+  --ss-shadow-sm: 0 1px 1px rgba(43, 34, 48, 0.10), 0 1px 2px rgba(43, 34, 48, 0.08);
+  --ss-shadow-md: 0 10px 24px rgba(43, 34, 48, 0.12);
+  --ss-shadow-lg: 0 18px 48px rgba(43, 34, 48, 0.16);
 
-  --ss-gradient-shell: linear-gradient(135deg, rgba(11, 99, 197, 0.18), rgba(0, 163, 191, 0.14));
-  --ss-gradient-surface: radial-gradient(900px 520px at 12% -8%, rgba(0, 163, 191, 0.14), transparent 60%),
-    radial-gradient(760px 420px at 92% 10%, rgba(11, 99, 197, 0.12), transparent 60%),
-    linear-gradient(180deg, #f6fbff 0%, #f6fbff 100%);
+  --ss-gradient-shell: linear-gradient(90deg, rgba(244, 114, 182, 0.34), rgba(245, 158, 11, 0.24));
+  --ss-gradient-surface: radial-gradient(980px 560px at 12% -10%, rgba(244, 114, 182, 0.38), transparent 62%),
+    radial-gradient(860px 520px at 92% 10%, rgba(245, 158, 11, 0.24), transparent 60%),
+    radial-gradient(820px 560px at 55% 108%, rgba(168, 85, 247, 0.10), transparent 62%),
+    linear-gradient(180deg, #fff7f5 0%, #fff7f5 100%);
 
-  --ss-chart-grid: rgba(15, 23, 42, 0.10);
-  --ss-chart-label: rgba(15, 23, 42, 0.62);
+  --ss-chart-grid: rgba(244, 114, 182, 0.14);
+  --ss-chart-label: rgba(43, 34, 48, 0.60);
 
-  --ss-focus: 0 0 0 4px rgba(0, 163, 191, 0.18);
-  --ss-focus-strong: 0 0 0 4px rgba(11, 99, 197, 0.18);
+  --ss-focus: 0 0 0 4px rgba(244, 114, 182, 0.18);
+  --ss-focus-strong: 0 0 0 4px rgba(245, 158, 11, 0.16);
 }
 
 /* Explicit dark override for [data-theme="dark"] (requested).
@@ -140,11 +144,11 @@
 :root[data-theme="dark"] {
   --ss-theme: dark;
 
-  --ss-background: #0b1220;
-  --ss-card-bg: rgba(17, 24, 39, 0.70);
-  --ss-text-primary: #e5e7eb;
-  --ss-text-secondary: #94a3b8;
-  --ss-border-color: rgba(148, 163, 184, 0.18);
+  --ss-background: #120a12;
+  --ss-card-bg: rgba(28, 15, 28, 0.72);
+  --ss-text-primary: rgba(255, 255, 255, 0.92);
+  --ss-text-secondary: rgba(255, 255, 255, 0.70);
+  --ss-border-color: rgba(244, 114, 182, 0.22);
 
   --ss-bg: var(--ss-background);
   --ss-text: var(--ss-text-primary);
@@ -198,7 +202,7 @@ a {
   top: 0;
   height: 100vh;
   padding: var(--ss-space-4) var(--ss-space-3);
-  background: linear-gradient(135deg, rgba(14, 77, 146, 0.72), rgba(11, 99, 197, 0.6));
+  background: var(--ss-gradient-shell);
   backdrop-filter: blur(12px);
   border-right: 1px solid var(--ss-border-color);
 }
@@ -225,7 +229,7 @@ a {
   content: "";
   position: absolute;
   inset: -30%;
-  background: radial-gradient(60px 60px at 30% 30%, rgba(0, 163, 191, 0.38), transparent 60%);
+  background: radial-gradient(60px 60px at 30% 30%, rgba(245, 158, 11, 0.30), transparent 60%);
   transform: rotate(15deg);
 }
 
@@ -310,7 +314,7 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--ss-space-4);
-  background: linear-gradient(135deg, rgba(14, 77, 146, 0.62), rgba(11, 99, 197, 0.44));
+  background: var(--ss-gradient-shell);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--ss-border-color);
 }
