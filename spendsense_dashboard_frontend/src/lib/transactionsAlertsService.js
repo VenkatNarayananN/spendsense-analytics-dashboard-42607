@@ -8,6 +8,18 @@ function toDateOnly(value) {
 }
 
 /**
+ * Normalizes an alerts "severity" field to one of the supported values.
+ * @param {any} value
+ * @returns {"info"|"warning"|"error"|"success"}
+ */
+function normalizeSeverity(value) {
+  const s = String(value || "info").toLowerCase();
+  if (s === "warn") return "warning";
+  if (s === "info" || s === "warning" || s === "error" || s === "success") return s;
+  return "info";
+}
+
+/**
  * PUBLIC_INTERFACE
  * Insert a new transaction for the current user.
  *
@@ -60,13 +72,63 @@ function mapAlertRowToUi(row) {
   return {
     id: row.id,
     type: row.type,
-    severity: row.severity || "info",
+    severity: normalizeSeverity(row.severity || "info"),
     date,
     status: row.is_read ? "resolved" : "open",
-    title: row.type || "Alert",
+    title: row.title || row.type || "Alert",
     description: row.message || "",
     is_read: Boolean(row.is_read),
   };
+}
+
+/**
+ * PUBLIC_INTERFACE
+ * Create a new alert for the current user.
+ *
+ * Expects an `alerts` table with columns:
+ * - user_id (uuid)
+ * - type (text)
+ * - title (text, optional)
+ * - message (text)
+ * - severity (text)
+ * - is_read (boolean)
+ * - created_at (timestamp)
+ *
+ * @param {string} userId
+ * @param {{type:string,title?:string,message:string,severity?:"info"|"warning"|"error"|"success"}} input
+ * @returns {Promise<{ok:true, alert:any, alertRow:any} | {ok:false, error:Error}>}
+ */
+export async function createAlert(userId, input) {
+  const supabase = getAuthedClient();
+  if (!supabase) return { ok: false, error: new Error("Supabase not configured") };
+  if (!userId) return { ok: false, error: new Error("Missing userId") };
+
+  const type = String(input?.type || "").trim();
+  const title = String(input?.title || "").trim();
+  const message = String(input?.message || "").trim();
+  const severity = normalizeSeverity(input?.severity || "info");
+
+  if (!type) return { ok: false, error: new Error("Type is required") };
+  if (!message) return { ok: false, error: new Error("Message is required") };
+
+  const row = {
+    user_id: userId,
+    type,
+    title: title || null,
+    message,
+    severity,
+    is_read: false,
+    created_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from("alerts")
+    .insert(row)
+    .select("id, user_id, type, title, message, severity, is_read, created_at")
+    .single();
+
+  if (error) return { ok: false, error };
+  return { ok: true, alert: mapAlertRowToUi(data), alertRow: data };
 }
 
 /**
@@ -90,7 +152,7 @@ export async function dismissAlert(userId, alertId) {
     .update({ is_read: true })
     .eq("id", alertId)
     .eq("user_id", userId)
-    .select("id, user_id, type, message, severity, is_read, created_at")
+    .select("id, user_id, type, title, message, severity, is_read, created_at")
     .single();
 
   if (error) return { ok: false, error };

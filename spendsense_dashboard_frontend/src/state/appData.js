@@ -9,7 +9,7 @@ import {
   subscribeToTransactionsRealtime,
   unsubscribeRealtimeChannel,
 } from "../lib/realtimeService";
-import { createTransaction as createTransactionDb, dismissAlert as dismissAlertDb } from "../lib/transactionsAlertsService";
+import { createAlert as createAlertDb, createTransaction as createTransactionDb, dismissAlert as dismissAlertDb } from "../lib/transactionsAlertsService";
 
 /**
  * AppDataContext:
@@ -180,6 +180,26 @@ export function AppDataProvider({ children }) {
     [isAuthenticated, supabaseConfigured, userId]
   );
 
+  const createAlert = useCallback(
+    async (input) => {
+      if (!supabaseConfigured || !isAuthenticated || !userId) {
+        return { ok: false, error: new Error("Not authenticated or Supabase not configured") };
+      }
+      const res = await createAlertDb(userId, input);
+      if (!res.ok) return res;
+
+      // Optimistic local update; realtime will also deliver it.
+      setAlerts((prev) => {
+        const next = Array.isArray(prev) ? [...prev] : [];
+        next.unshift(res.alert);
+        return next;
+      });
+
+      return res;
+    },
+    [isAuthenticated, supabaseConfigured, userId]
+  );
+
   const dismissAlert = useCallback(
     async (alertId) => {
       if (!supabaseConfigured || !isAuthenticated || !userId) {
@@ -295,6 +315,7 @@ export function AppDataProvider({ children }) {
       refreshAlerts,
       refreshAll,
       createTransaction,
+      createAlert,
       dismissAlert,
       generateSampleDataAction,
     }),
@@ -309,6 +330,7 @@ export function AppDataProvider({ children }) {
       transactions,
       realtimeStatus,
       createTransaction,
+      createAlert,
       dismissAlert,
       generateSampleDataAction,
     ]
