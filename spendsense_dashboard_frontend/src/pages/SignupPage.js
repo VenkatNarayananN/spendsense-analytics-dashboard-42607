@@ -213,11 +213,6 @@ export default function SignupPage() {
                 <Button type="submit" disabled={loading || submitting || !canSubmit}>
                   {submitting ? "Creating…" : "Create account"}
                 </Button>
-                <Link to="/login" style={{ textDecoration: "none" }}>
-                  <Button type="button" variant="ghost" disabled={loading || submitting}>
-                    Sign in instead
-                  </Button>
-                </Link>
 
                 <span className="ss-muted" style={{ fontSize: 13 }}>
                   Already have an account?{" "}

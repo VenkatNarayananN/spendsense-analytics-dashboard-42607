@@ -219,12 +219,6 @@ export default function LoginPage() {
                   {submitting ? "Signing in…" : "Sign in"}
                 </Button>
 
-                <Link to="/signup" style={{ textDecoration: "none" }}>
-                  <Button type="button" variant="ghost" disabled={loading || submitting}>
-                    Create an account
-                  </Button>
-                </Link>
-
                 <span className="ss-muted" style={{ fontSize: 13 }}>
                   New here?{" "}
                   <Link to="/signup" style={{ color: "var(--ss-primary)", fontWeight: 600 }}>
