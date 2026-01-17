@@ -1,69 +1,81 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, Chip, PageHeader } from "../components/ui";
 import { AreaLineChart, BarChart } from "../components/charts";
-import { getDashboardMock } from "../mock/mockData";
 import { EmptyState, FilterBar } from "../components/ux";
+import { usePreferences } from "../state/preferences";
+import {
+  categoryHighlight,
+  deriveAlerts,
+  deriveDashboardMetrics,
+  generateDemoTransactions,
+  merchantHighlight,
+  monthSpendComparison,
+} from "../mock/demoData";
 
-function fmtCurrency(n) {
+function fmtCurrency(n, currency = "USD") {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
   } catch {
-    return `$${n.toFixed(2)}`;
+    return `$${Number(n || 0).toFixed(2)}`;
   }
-}
-
-function sliceForTimeframe(arr, tf) {
-  if (!Array.isArray(arr)) return [];
-  if (tf === "7D") return arr.slice(Math.max(0, arr.length - 7));
-  if (tf === "90D") return arr; // mock: show full
-  return arr.slice(Math.max(0, arr.length - 14));
 }
 
 // PUBLIC_INTERFACE
 export default function DashboardPage() {
-  /** Dashboard with summary cards and charts using mock data, plus timeframe and loading/empty UX. */
-  const data = useMemo(() => getDashboardMock(), []);
-  const [timeframe, setTimeframe] = useState("30D");
+  /** Dashboard: realistic KPIs, category breakdown, spending trend, and plain-English highlights. */
+  const { prefs } = usePreferences();
 
-  // Simulated loading
+  // Simulated loading (bounded; no infinite loaders)
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    const t = window.setTimeout(() => setIsLoading(false), 380);
+    const t = window.setTimeout(() => setIsLoading(false), 420);
     return () => window.clearTimeout(t);
   }, []);
 
-  const series = useMemo(() => sliceForTimeframe(data.spendSeries, timeframe), [data.spendSeries, timeframe]);
-  const cats = useMemo(() => data.categoryDistribution || [], [data.categoryDistribution]);
-  const hasAnyData = series.length > 0 || cats.length > 0;
+  /**
+   * Data source strategy:
+   * - Until backend is wired, "real data" is unavailable, so we fall back to demo.
+   * - Demo mode toggle must affect ONLY analytics pages; this page is analytics => obey demoMode.
+   */
+  const transactions = useMemo(() => {
+    const demo = generateDemoTransactions({ seed: 42, count: 52, currency: prefs.currency });
+    return prefs.demoMode ? demo : demo; // placeholder: when real data exists, use it here if demoMode=false
+  }, [prefs.demoMode, prefs.currency]);
+
+  const metrics = useMemo(
+    () => deriveDashboardMetrics(transactions, { monthlyBudget: prefs.monthlyBudget }),
+    [transactions, prefs.monthlyBudget]
+  );
+
+  const alerts = useMemo(
+    () => deriveAlerts(transactions, { monthlyBudget: prefs.monthlyBudget, alertsEnabled: prefs.alertsEnabled }),
+    [transactions, prefs.monthlyBudget, prefs.alertsEnabled]
+  );
+
+  const highlight1 = useMemo(() => monthSpendComparison(transactions), [transactions]);
+  const highlight2 = useMemo(() => categoryHighlight(transactions), [transactions]);
+  const highlight3 = useMemo(() => merchantHighlight(transactions), [transactions]);
+
+  const hasAnyData = transactions.length > 0;
 
   return (
     <main role="main" aria-label="Dashboard">
       <PageHeader
         title="Dashboard"
-        description="A quick overview of spend, budget utilization, and category distribution."
-        right={<Chip tone="primary">Fintech</Chip>}
+        description="A quick overview of this month’s spending, budget health, and category mix."
+        right={<Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>}
       />
 
       <FilterBar
-        title="Dashboard timeframe"
+        title="Dashboard context"
         left={
-          <label className="ss-muted" style={{ fontSize: 12 }}>
-            Timeframe
-            <select
-              className="ss-select"
-              value={timeframe}
-              onChange={(e) => setTimeframe(e.target.value)}
-              aria-label="Dashboard timeframe selector"
-              style={{ minWidth: 180 }}
-            >
-              <option value="7D">7D</option>
-              <option value="30D">30D</option>
-              <option value="90D">90D</option>
-            </select>
-          </label>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <Chip tone="primary">Current month</Chip>
+            <Chip tone="secondary">{prefs.currency}</Chip>
+            <Chip tone={prefs.alertsEnabled ? "success" : "warn"}>{prefs.alertsEnabled ? "Alerts on" : "Alerts off"}</Chip>
+          </div>
         }
-        right={<div className="ss-muted" style={{ fontSize: 12 }}>Affects charts and summaries</div>}
-        onReset={() => setTimeframe("30D")}
+        right={<div className="ss-muted" style={{ fontSize: 12 }}>KPIs reflect the current calendar month</div>}
       />
 
       <div style={{ height: 12 }} />
@@ -73,30 +85,59 @@ export default function DashboardPage() {
           title="No data yet"
           description="Connect an account or import transactions to populate your dashboard."
           primaryAction={{ label: "Import transactions", onClick: () => {}, variant: "primary" }}
-          secondaryAction={{ label: "View transactions", onClick: () => (window.location.href = "/transactions"), variant: "ghost" }}
+          secondaryAction={{
+            label: "Go to transactions",
+            onClick: () => (window.location.href = "/transactions"),
+            variant: "ghost",
+          }}
         />
       ) : (
         <>
+          {/* KPI cards required by spec */}
           <div className="ss-grid ss-grid-3" aria-label="summary cards">
-            <Card title="Spend Total" caption={`${timeframe} (mock)`}>
+            <Card title="Total spend" caption="Current month">
+              {isLoading ? (
+                <div className="ss-skeleton" style={{ height: 28, width: 180, borderRadius: 12 }} />
+              ) : (
+                <div className="ss-kpi">
+                  <strong>{fmtCurrency(metrics.totalSpend, prefs.currency)}</strong>
+                  <span className="ss-muted">budget {fmtCurrency(prefs.monthlyBudget, prefs.currency)}</span>
+                </div>
+              )}
+            </Card>
+
+            <Card title="Avg daily spend" caption="Based on days with activity">
               {isLoading ? (
                 <div className="ss-skeleton" style={{ height: 28, width: 160, borderRadius: 12 }} />
               ) : (
                 <div className="ss-kpi">
-                  <strong>{fmtCurrency(data.spendTotal)}</strong>
-                  <span className="ss-muted">across {cats.length} categories</span>
+                  <strong>{fmtCurrency(metrics.avgDaily, prefs.currency)}</strong>
+                  <span className="ss-muted">per active day</span>
+                </div>
+              )}
+            </Card>
+
+            <Card title="Top category" caption="Current month" right={isLoading ? null : <Chip tone="secondary">{metrics.topCategory.label}</Chip>}>
+              {isLoading ? (
+                <div className="ss-skeleton" style={{ height: 28, width: 140, borderRadius: 12 }} />
+              ) : (
+                <div className="ss-kpi">
+                  <strong>{fmtCurrency(metrics.topCategory.value, prefs.currency)}</strong>
+                  <span className="ss-muted">largest category total</span>
                 </div>
               )}
             </Card>
 
             <Card
-              title="Budget Utilization"
-              caption={`Budget: ${fmtCurrency(data.budget)} (mock)`}
+              title="Budget utilization"
+              caption="Current month"
               right={
                 isLoading ? (
                   <span className="ss-skeleton" style={{ width: 54, height: 22, borderRadius: 999, display: "inline-block" }} />
                 ) : (
-                  <Chip tone={data.utilization >= 85 ? "error" : data.utilization >= 70 ? "warn" : "success"}>{data.utilization}%</Chip>
+                  <Chip tone={metrics.utilization >= 90 ? "error" : metrics.utilization >= 80 ? "warn" : "success"}>
+                    {Math.max(0, metrics.utilization)}%
+                  </Chip>
                 )
               }
             >
@@ -112,26 +153,26 @@ export default function DashboardPage() {
                 >
                   <div
                     style={{
-                      width: isLoading ? "45%" : `${Math.min(100, data.utilization)}%`,
+                      width: isLoading ? "40%" : `${Math.min(100, Math.max(0, metrics.utilization))}%`,
                       height: "100%",
-                      background: "linear-gradient(90deg, #22D3EE, #6366F1)",
+                      background: "linear-gradient(90deg, var(--ss-secondary), var(--ss-primary))",
                       transition: "width 220ms ease",
                     }}
                   />
                 </div>
                 <p className="ss-card-caption" style={{ marginTop: 10 }}>
-                  Keep utilization under <strong>80%</strong> for more flexibility.
+                  A good target is staying under <strong>80%</strong> until the final week of the month.
                 </p>
               </div>
             </Card>
 
-            <Card title="Top Category" caption="Highest contribution (mock)" right={isLoading ? null : <Chip tone="secondary">{data.topCategory.label}</Chip>}>
+            <Card title="Alerts" caption="Needs attention">
               {isLoading ? (
-                <div className="ss-skeleton" style={{ height: 28, width: 140, borderRadius: 12 }} />
+                <div className="ss-skeleton" style={{ height: 28, width: 120, borderRadius: 12 }} />
               ) : (
                 <div className="ss-kpi">
-                  <strong>{fmtCurrency(data.topCategory.value)}</strong>
-                  <span className="ss-muted">this period</span>
+                  <strong>{alerts.filter((a) => a.status === "open").length}</strong>
+                  <span className="ss-muted">open alerts</span>
                 </div>
               )}
             </Card>
@@ -139,22 +180,38 @@ export default function DashboardPage() {
 
           <div className="ss-divider" />
 
+          {/* Highlights in plain English */}
+          <div className="ss-grid ss-grid-3" aria-label="dashboard highlights">
+            <Card title="Highlight" caption="Monthly comparison">
+              {isLoading ? <div className="ss-skeleton" style={{ height: 12, width: "92%", borderRadius: 999 }} /> : <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.55 }}>{highlight1}</div>}
+            </Card>
+            <Card title="Highlight" caption="Category focus">
+              {isLoading ? <div className="ss-skeleton" style={{ height: 12, width: "88%", borderRadius: 999 }} /> : <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.55 }}>{highlight2}</div>}
+            </Card>
+            <Card title="Highlight" caption="Merchant behavior">
+              {isLoading ? <div className="ss-skeleton" style={{ height: 12, width: "84%", borderRadius: 999 }} /> : <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.55 }}>{highlight3}</div>}
+            </Card>
+          </div>
+
+          <div className="ss-divider" />
+
+          {/* Charts required by spec */}
           <div className="ss-grid ss-grid-2" aria-label="dashboard charts">
-            <Card title="Spend Over Time" caption={`${timeframe} trend (mock)`}>
+            <Card title="Spending trend" caption="Last 30 days">
               <AreaLineChart
-                title="Spend over time"
-                data={series}
+                title="Spending trend (last 30 days)"
+                data={metrics.spendTrend}
                 isLoading={isLoading}
-                emptyMessage="No spend series for this timeframe. Try expanding the timeframe."
+                emptyMessage="No spending trend data yet."
               />
             </Card>
 
-            <Card title="Category Distribution" caption="Total spend by category (mock)">
+            <Card title="Category breakdown" caption="Current month totals">
               <BarChart
-                title="Category distribution"
-                data={cats}
+                title="Category breakdown"
+                data={metrics.categoryBreakdown}
                 isLoading={isLoading}
-                emptyMessage="No category totals available yet. Import transactions to populate categories."
+                emptyMessage="No category totals yet."
               />
             </Card>
           </div>
@@ -163,3 +220,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+

@@ -14,6 +14,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import ProtectedExamplePage from "./pages/ProtectedExamplePage";
 import LoginPage from "./pages/LoginPage";
+import { PreferencesProvider } from "./state/preferences";
 
 function titleForPath(pathname) {
   if (pathname === "/") return "Dashboard";
@@ -45,8 +46,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <div className="ss-app">
-        <div className="ss-shell">
+      <PreferencesProvider>
+        <div className="ss-app">
+          <div className="ss-shell">
           {/* Mobile overlay backdrop */}
           <button
             type="button"
@@ -96,8 +98,9 @@ function App() {
               </Routes>
             </div>
           </div>
+          </div>
         </div>
-      </div>
+      </PreferencesProvider>
     </AuthProvider>
   );
 }

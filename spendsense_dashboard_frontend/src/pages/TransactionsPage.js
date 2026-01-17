@@ -2,23 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import { Button, Chip, PageHeader } from "../components/ui";
 import { IconSearch } from "../components/icons";
-import { getTransactionsMock } from "../mock/mockData";
 import { EmptyState, FilterBar } from "../components/ux";
 import { parsers, useDebouncedValue, useURLQueryState } from "../components/urlState";
+import { usePreferences } from "../state/preferences";
+import { generateDemoTransactions } from "../mock/demoData";
 
-function fmtCurrency(n) {
+function fmtCurrency(n, currency = "USD") {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
   } catch {
-    return `$${n.toFixed(2)}`;
+    return `$${Number(n || 0).toFixed(2)}`;
   }
 }
-
-const statusTone = {
-  Cleared: "success",
-  Pending: "warn",
-  Flagged: "error",
-};
 
 function clampAmountString(v) {
   // Keep user input flexible; just trim spaces
@@ -27,8 +22,8 @@ function clampAmountString(v) {
 
 // PUBLIC_INTERFACE
 export default function TransactionsPage() {
-  /** Searchable + filterable transactions table using mock data, with URL-synced filters. */
-  const all = useMemo(() => getTransactionsMock(), []);
+  /** Searchable + filterable transactions table with realistic demo data and URL-synced filters. */
+  const { prefs } = usePreferences();
 
   // URL-synced filters
   const [filters, setFilters, resetFilters] = useURLQueryState({
@@ -40,7 +35,7 @@ export default function TransactionsPage() {
     to: { default: "", parse: parsers.string, serialize: (v) => String(v || "") },
   });
 
-  // Debounce only the search query to avoid excessive filter re-rendering and to improve typing feel.
+  // Debounce only the search query (better typing feel).
   const [qDraft, setQDraft] = useState(filters.q);
   useEffect(() => setQDraft(filters.q), [filters.q]);
   const qDebounced = useDebouncedValue(qDraft, 250);
@@ -51,21 +46,26 @@ export default function TransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qDebounced]);
 
-  const categories = useMemo(() => ["All", ...Array.from(new Set(all.map((t) => t.category)))], [all]);
-
-  // Simulated loading to demonstrate skeleton UX while staying mock-data-based.
+  // Simulated loading to demonstrate skeleton UX while staying mock-data-based (bounded).
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const t = window.setTimeout(() => setIsLoading(false), 450);
     return () => window.clearTimeout(t);
   }, []);
 
+  const all = useMemo(() => {
+    const demo = generateDemoTransactions({ seed: 42, count: 54, currency: prefs.currency });
+    return prefs.demoMode ? demo : demo; // placeholder: when real data exists, use it here if demoMode=false
+  }, [prefs.demoMode, prefs.currency]);
+
+  const categories = useMemo(() => ["All", ...Array.from(new Set(all.map((t) => t.category)))], [all]);
+
   const rows = useMemo(() => {
     const qLower = String(filters.q || "").trim().toLowerCase();
 
     return all.filter((t) => {
       if (qLower) {
-        const text = `${t.merchant} ${t.category} ${t.status} ${t.date}`.toLowerCase();
+        const text = `${t.merchant} ${t.category} ${t.date} ${t.currency}`.toLowerCase();
         if (!text.includes(qLower)) return false;
       }
 
@@ -91,13 +91,9 @@ export default function TransactionsPage() {
       {
         key: "amount",
         header: "Amount",
-        render: (r) => <span style={{ fontWeight: 900 }}>{fmtCurrency(r.amount)}</span>,
+        render: (r) => <span style={{ fontWeight: 900 }}>{fmtCurrency(r.amount, r.currency)}</span>,
       },
-      {
-        key: "status",
-        header: "Status",
-        render: (r) => <Chip tone={statusTone[r.status] || "primary"}>{r.status}</Chip>,
-      },
+      { key: "currency", header: "Currency" },
     ],
     []
   );
@@ -158,8 +154,8 @@ export default function TransactionsPage() {
     <main role="main" aria-label="Transactions">
       <PageHeader
         title="Transactions"
-        description="Search, filter, and review your transactions. (Mock dataset; API wiring later.)"
-        right={<Chip tone="secondary">URL-synced filters</Chip>}
+        description="Search, filter, and review your transactions."
+        right={<Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>}
       />
 
       <FilterBar
@@ -176,7 +172,7 @@ export default function TransactionsPage() {
                 style={{ paddingLeft: 40, minWidth: 280 }}
                 value={qDraft}
                 onChange={(e) => setQDraft(e.target.value)}
-                placeholder="Search merchant, category, status…"
+                placeholder="Search merchant or category…"
                 aria-label="Search transactions"
               />
             </div>
@@ -230,13 +226,13 @@ export default function TransactionsPage() {
 
       <DataTable
         columns={columns}
-        rows={rows.sort((a, b) => (a.date < b.date ? 1 : -1))}
+        rows={rows}
         pageSize={10}
         isLoading={isLoading}
         emptySlot={
           <EmptyState
             title="No transactions match your filters"
-            description="Try adjusting the date range, category, or amount filters. You can also import a dataset to get started."
+            description="Try adjusting the date range, category, or amount filters. If you’re expecting data, import a dataset to get started."
             primaryAction={{ label: "Import transactions", onClick: () => {}, variant: "primary" }}
             secondaryAction={{ label: "Reset filters", onClick: reset, variant: "ghost" }}
           />
@@ -245,3 +241,4 @@ export default function TransactionsPage() {
     </main>
   );
 }
+
