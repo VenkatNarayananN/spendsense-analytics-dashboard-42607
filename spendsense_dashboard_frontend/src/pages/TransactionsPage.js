@@ -287,11 +287,6 @@ export default function TransactionsPage() {
               </select>
             </label>
 
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
-              <Button variant="ghost" onClick={clearFilters} aria-label="Clear filters">
-                Clear
-              </Button>
-            </div>
           </div>
 
           <div className="ss-filterbar-right" style={{ alignItems: "flex-end" }}>
@@ -311,6 +306,12 @@ export default function TransactionsPage() {
                 <option value="amount_asc">Amount (Low → High)</option>
               </select>
             </label>
+
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
+              <Button variant="ghost" onClick={clearFilters} aria-label="Clear filters">
+                Clear
+              </Button>
+            </div>
           </div>
         </div>
       </section>
