@@ -203,8 +203,8 @@ export default function TransactionsPage() {
   );
 
   const topRight = (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-      <Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+      {/* Keep ONLY the realtime status indicator (green dot) and remove the duplicate Live chip. */}
       {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.transactions} label="Live" /> : null}
       <Button variant="primary" onClick={openNewTx} disabled={!canOpenNewTx} aria-label="New Transaction">
         New Transaction
