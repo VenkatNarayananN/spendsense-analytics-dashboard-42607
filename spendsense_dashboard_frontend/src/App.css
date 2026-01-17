@@ -483,3 +483,205 @@ a {
     padding: 0 var(--ss-space-3);
   }
 }
+
+/* ---------- Navbar + Mobile Shell Enhancements ---------- */
+
+.ss-icon-btn {
+  appearance: none;
+  border: 1px solid var(--ss-border);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 14px;
+  height: 40px;
+  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--ss-shadow-sm);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.ss-icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ss-shadow-md);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.ss-burger {
+  width: 18px;
+  height: 14px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ss-burger span {
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(55, 65, 81, 0.72);
+}
+
+.ss-dots {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+.ss-dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(55, 65, 81, 0.55);
+  align-self: center;
+}
+
+.ss-topbar-menu {
+  position: absolute;
+  top: calc(var(--ss-topbar-h) - 8px);
+  right: var(--ss-space-4);
+  width: min(420px, calc(100vw - 24px));
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--ss-border);
+  border-radius: 18px;
+  box-shadow: var(--ss-shadow-md);
+  padding: 12px;
+  transform: translateY(-6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.ss-topbar-menu.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.ss-topbar-menu-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ss-topbar-link {
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ss-border);
+  background: rgba(253, 242, 248, 0.45);
+  color: rgba(55, 65, 81, 0.86);
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.ss-topbar-link:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ss-shadow-sm);
+  background: rgba(244, 114, 182, 0.10);
+  border-color: rgba(244, 114, 182, 0.24);
+}
+
+.ss-topbar-link.is-active {
+  background: rgba(244, 114, 182, 0.14);
+  border-color: rgba(244, 114, 182, 0.30);
+  color: var(--ss-text);
+}
+
+/* Chart skeleton placeholders */
+.ss-chart-skeleton {
+  width: 100%;
+  border-radius: 18px;
+  border: 1px dashed rgba(244, 114, 182, 0.35);
+  background: rgba(253, 242, 248, 0.5);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.ss-chart-empty {
+  text-align: center;
+  padding: 16px;
+}
+
+.ss-chart-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(244, 114, 182, 0.06),
+    rgba(245, 158, 11, 0.08),
+    rgba(167, 139, 250, 0.06)
+  );
+  background-size: 200% 100%;
+  animation: ss-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes ss-shimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 200% 0%;
+  }
+}
+
+/* Mobile sidebar overlay behavior */
+.ss-sidebar-backdrop {
+  display: none;
+  border: none;
+  padding: 0;
+}
+
+@media (max-width: 860px) {
+  /* Keep topbar menu button visible; burger toggles sidebar drawer behavior */
+  .ss-topbar-burger {
+    display: inline-flex;
+  }
+
+  .ss-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 30;
+    transform: translateX(-110%);
+    transition: transform 160ms ease;
+    width: var(--ss-sidebar-w);
+    box-shadow: var(--ss-shadow-md);
+  }
+
+  .ss-sidebar.is-mobile-open {
+    transform: translateX(0);
+  }
+
+  .ss-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgba(17, 24, 39, 0.18);
+    backdrop-filter: blur(1px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+
+  .ss-sidebar-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Let the main column take full width; sidebar becomes overlay drawer */
+  .ss-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .ss-main {
+    min-width: 0;
+  }
+}
