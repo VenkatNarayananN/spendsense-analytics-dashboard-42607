@@ -2,24 +2,23 @@
  * Supabase client singleton for the SpendSense frontend.
  *
  * Usage:
- *   import { supabase, isSupabaseConfigured, isSupabaseConfiguredFn, getSupabase } from '../lib/supabaseClient';
+ *   import { supabase, isSupabaseConfigured, isSupabaseConfiguredFn, getSupabase, getSupabaseDiagnostics } from '../lib/supabaseClient';
  *
  * Notes:
  * - This module is intentionally "safe" for demo mode: if env vars are missing,
  *   we do NOT throw at import time; we expose `supabase = null` instead.
- * - If '@supabase/supabase-js' is not installed, install it:
- *     npm i @supabase/supabase-js
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * Env wiring:
  * - CRA exposes only REACT_APP_* at build time.
- * - We still support common fallback names to reduce misconfig friction in other environments.
+ * - We also support common fallback names to reduce misconfig friction in other environments.
  */
 /** @type {string | undefined} */
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
+
 /** @type {string | undefined} */
 const supabaseAnonKey =
   process.env.REACT_APP_SUPABASE_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
@@ -43,9 +42,9 @@ export function getSupabaseDiagnostics() {
   const keyPresent = Boolean(supabaseAnonKey);
 
   /** @type {string} */
-  const urlValue = supabaseUrl || '';
+  const urlValue = supabaseUrl || "";
   /** @type {string} */
-  const keySuffix = supabaseAnonKey ? String(supabaseAnonKey).slice(-6) : '';
+  const keySuffix = supabaseAnonKey ? String(supabaseAnonKey).slice(-6) : "";
 
   return {
     configured: Boolean(urlPresent && keyPresent),
@@ -70,11 +69,10 @@ export function isSupabaseConfiguredFn() {
 }
 
 // In development, log a concise warning if missing, but keep the app running for demo mode.
-if (!isSupabaseConfigured && process.env.NODE_ENV === 'development') {
-  // Keep it short to avoid noisy console output.
+if (!isSupabaseConfigured && process.env.NODE_ENV === "development") {
   // eslint-disable-next-line no-console
   console.warn(
-    '[supabase] Not configured: set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY to enable Supabase features.'
+    "[supabase] Not configured: set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY to enable Supabase features."
   );
 }
 

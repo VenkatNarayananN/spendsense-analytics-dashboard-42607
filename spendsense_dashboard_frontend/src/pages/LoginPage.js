@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button, Card, Chip } from "../components/ui";
 import { useAuth } from "../auth/AuthProvider";
-import { getSupabaseDiagnostics, isSupabaseConfiguredFn } from "../lib/supabaseClient";
+import { getSupabaseDiagnostics } from "../lib/supabaseClient";
 import Logo from "../components/Logo";
 
 function isValidEmail(email) {
@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   const from = useMemo(() => {
     const st = loc.state;
-    // ProtectedRoute sets `state.from` to the pathname; after login we redirect there.
+    // ProtectedRoute/AuthGate sets `state.from` to the pathname; after login we redirect there.
     // If no prior protected destination exists, redirect to /dashboard per requirement.
     return st && typeof st === "object" && st.from ? st.from : "/dashboard";
   }, [loc.state]);
@@ -61,9 +61,8 @@ export default function LoginPage() {
   };
 
   const canSubmit = useMemo(() => {
-    // UI enablement is driven by form validity + async state only.
-    // If Supabase is misconfigured, the AuthProvider will return a clear error on submit,
-    // and diagnostics on this page will explain what's missing.
+    // Sign In should only be disabled while auth is loading/submitting or fields are empty/invalid.
+    // Do NOT disable based on Supabase env; misconfig will surface as a submit-time error + banner.
     if (!email.trim() || !password) return false;
     if (!isValidEmail(email)) return false;
     return true;
@@ -84,7 +83,8 @@ export default function LoginPage() {
         setFormError(res?.error?.message || "Sign in failed.");
         return;
       }
-      nav(from, { replace: true });
+      // Requirement: after successful signInWithPassword, redirect to /dashboard (or prior protected route).
+      nav(from || "/dashboard", { replace: true });
     } finally {
       setSubmitting(false);
     }
@@ -106,7 +106,9 @@ export default function LoginPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <Logo size="lg" alt="SpendSense logo" />
             <div>
-              <h1 className="ss-section-title" style={{ marginBottom: 6 }}>Sign in</h1>
+              <h1 className="ss-section-title" style={{ marginBottom: 6 }}>
+                Sign in
+              </h1>
               <p className="ss-section-desc">Authenticate with Supabase to access your dashboard</p>
             </div>
           </div>
@@ -155,7 +157,7 @@ export default function LoginPage() {
 
             {!supabaseDiag.configured ? (
               <div className="ss-card-caption" style={{ color: "var(--ss-error)" }}>
-                Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY (or fallbacks). You can still
+                Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY (or supported fallbacks). You can still
                 interact with the form; submission will fail until env is set.
               </div>
             ) : null}
@@ -228,7 +230,7 @@ export default function LoginPage() {
               </div>
 
               <p className="ss-card-caption" style={{ marginTop: 12 }}>
-                This app requires an authenticated Supabase session. Demo/mock sign-in has been removed.
+                This app requires an authenticated Supabase session.
               </p>
             </form>
           </Card>
@@ -242,8 +244,7 @@ export default function LoginPage() {
                 Your session persists across refresh (enabled in the Supabase client).
               </li>
               <li className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-                After sign in you will be redirected to:{" "}
-                <code style={{ fontFamily: "var(--ss-mono)" }}>{from}</code>
+                After sign in you will be redirected to: <code style={{ fontFamily: "var(--ss-mono)" }}>{from}</code>
               </li>
             </ul>
           </Card>
