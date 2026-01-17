@@ -28,12 +28,13 @@ export default function SignupPage() {
   const [formError, setFormError] = useState("");
 
   const canSubmit = useMemo(() => {
-    if (!supabaseConfigured) return false;
+    // UI enablement is driven by form validity + async state only.
+    // If Supabase is misconfigured, we'll surface a clear error after submit (see onSubmit).
     if (!email.trim() || !password || !confirm) return false;
     if (password !== confirm) return false;
     if (!isValidEmail(email)) return false;
     return true;
-  }, [supabaseConfigured, email, password, confirm]);
+  }, [email, password, confirm]);
 
   const validate = () => {
     const next = {};
@@ -208,7 +209,7 @@ export default function SignupPage() {
 
               <div style={{ height: 14 }} />
 
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <Button type="submit" disabled={loading || submitting || !canSubmit}>
                   {submitting ? "Creating…" : "Create account"}
                 </Button>
@@ -217,6 +218,13 @@ export default function SignupPage() {
                     Sign in instead
                   </Button>
                 </Link>
+
+                <span className="ss-muted" style={{ fontSize: 13 }}>
+                  Already have an account?{" "}
+                  <Link to="/login" style={{ color: "var(--ss-primary)", fontWeight: 600 }}>
+                    Sign in
+                  </Link>
+                </span>
               </div>
 
               <p className="ss-card-caption" style={{ marginTop: 12 }}>

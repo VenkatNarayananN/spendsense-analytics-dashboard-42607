@@ -214,7 +214,7 @@ export default function LoginPage() {
 
               <div style={{ height: 14 }} />
 
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                 <Button type="submit" disabled={loading || submitting || !canSubmit}>
                   {submitting ? "Signing in…" : "Sign in"}
                 </Button>
@@ -224,6 +224,13 @@ export default function LoginPage() {
                     Create an account
                   </Button>
                 </Link>
+
+                <span className="ss-muted" style={{ fontSize: 13 }}>
+                  New here?{" "}
+                  <Link to="/signup" style={{ color: "var(--ss-primary)", fontWeight: 600 }}>
+                    Create account
+                  </Link>
+                </span>
               </div>
 
               <p className="ss-card-caption" style={{ marginTop: 12 }}>
