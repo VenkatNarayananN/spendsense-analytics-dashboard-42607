@@ -124,7 +124,11 @@ export default function TopbarProfileDropdown() {
       >
         <span className="ss-prof-avatar" aria-label={profile?.avatarUrl ? "User avatar" : "User initials"}>
           {profile?.avatarUrl ? (
-            <span className="ss-prof-avatar-img" style={{ backgroundImage: `url(${profile.avatarUrl})` }} aria-hidden="true" />
+            <span
+              className="ss-prof-avatar-img"
+              style={{ backgroundImage: `url(${profile.avatarUrl})` }}
+              aria-hidden="true"
+            />
           ) : (
             <span className="ss-prof-avatar-initials" aria-hidden="true">
               {initials}

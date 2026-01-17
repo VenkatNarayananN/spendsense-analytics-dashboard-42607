@@ -326,6 +326,76 @@ a {
   min-width: 0;
 }
 
+.ss-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Theme toggle pill (matches reference: compact select-like control) */
+.ss-theme-pill {
+  appearance: none;
+  border: 1px solid color-mix(in srgb, var(--ss-border-color) 92%, transparent);
+  background: color-mix(in srgb, var(--ss-card-bg) 40%, transparent);
+  border-radius: 999px;
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: var(--ss-shadow-sm);
+  transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
+  color: color-mix(in srgb, var(--ss-text-primary) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.ss-theme-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ss-shadow-md);
+  background: color-mix(in srgb, var(--ss-card-bg) 55%, transparent);
+  border-color: color-mix(in srgb, var(--ss-secondary) 34%, transparent);
+}
+
+.ss-theme-pill-label {
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: 0.1px;
+}
+
+.ss-theme-pill-caret {
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid color-mix(in srgb, var(--ss-text-secondary) 65%, transparent);
+  border-bottom: 2px solid color-mix(in srgb, var(--ss-text-secondary) 65%, transparent);
+  transform: rotate(45deg);
+}
+
+/* Signed-in label placed immediately beside the profile control */
+.ss-topbar-profgroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ss-topbar-signedin {
+  font-size: 12px;
+  font-weight: 850;
+  color: color-mix(in srgb, var(--ss-text-secondary) 80%, transparent);
+  white-space: nowrap;
+}
+
+/* Tighten profile pill to better match reference alignment */
+.ss-prof-btn {
+  height: 34px;
+  padding: 4px 10px 4px 4px;
+}
+.ss-prof-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 11px;
+}
+
 .ss-topbar-title {
   font-size: 16px;
   font-weight: 850;
@@ -808,64 +878,7 @@ a {
   align-self: center;
 }
 
-.ss-topbar-menu {
-  position: absolute;
-  top: calc(var(--ss-topbar-h) - 8px);
-  right: var(--ss-space-4);
-  width: min(420px, calc(100vw - 24px));
-  background: color-mix(in srgb, var(--ss-card-bg) 92%, rgba(15, 23, 42, 0.92));
-  border: 1px solid var(--ss-border);
-  border-radius: 18px;
-  box-shadow: var(--ss-shadow-md);
-  padding: 12px;
-  transform: translateY(-6px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 120ms ease, transform 120ms ease;
-  backdrop-filter: blur(12px);
-}
-
-:root[data-ss-theme="light"] .ss-topbar-menu,
-:root[data-theme="light"] .ss-topbar-menu {
-  background: color-mix(in srgb, var(--ss-card-bg) 92%, transparent);
-}
-
-.ss-topbar-menu.is-open {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.ss-topbar-menu-inner {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.ss-topbar-link {
-  text-decoration: none;
-  font-weight: 850;
-  font-size: 12px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--ss-border);
-  background: color-mix(in srgb, var(--ss-card-bg) 45%, transparent);
-  color: color-mix(in srgb, var(--ss-text-primary) 92%, transparent);
-  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-}
-
-.ss-topbar-link:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--ss-shadow-sm);
-  background: color-mix(in srgb, var(--ss-card-bg) 55%, transparent);
-  border-color: color-mix(in srgb, var(--ss-secondary) 28%, transparent);
-}
-
-.ss-topbar-link.is-active {
-  background: rgba(0, 163, 191, 0.14);
-  border-color: rgba(0, 163, 191, 0.32);
-  color: var(--ss-text-strong);
-}
+/* Note: Topbar overflow menu removed in favor of always-visible sidebar + cleaner topbar controls. */
 
 /* ---------- Topbar profile dropdown ---------- */
 

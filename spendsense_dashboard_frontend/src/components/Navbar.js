@@ -73,57 +73,28 @@ export default function Navbar({ onToggleSidebar }) {
         </div>
       </div>
 
-      <div className="ss-topbar-right" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div className="ss-topbar-status" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {isAuthenticated ? <Chip tone="success">Signed in</Chip> : <Chip tone="secondary">Guest</Chip>}
-        </div>
-
+      <div className="ss-topbar-right">
         <button
           type="button"
-          className="ss-icon-btn"
+          className="ss-theme-pill"
           aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
           title={`Theme: ${theme === "dark" ? "Dark" : "Light"}`}
           onClick={() => toggleTheme()}
         >
-          <span aria-hidden="true" style={{ fontWeight: 950, fontSize: 12 }}>
+          <span className="ss-theme-pill-label" aria-hidden="true">
             {theme === "dark" ? "Dark" : "Light"}
           </span>
+          <span className="ss-theme-pill-caret" aria-hidden="true" />
         </button>
 
         {/* Profile control (avatar/initials + name/email) with dropdown actions */}
-        <TopbarProfileDropdown />
-
-        <button
-          type="button"
-          className="ss-icon-btn ss-topbar-menu-btn"
-          aria-expanded={menuOpen}
-          aria-controls="ss-topbar-menu"
-          aria-label="Toggle top navigation menu"
-          onClick={() => setMenuOpen((v) => !v)}
-        >
-          <span className="ss-dots" aria-hidden="true">
-            <span />
-            <span />
-            <span />
+        <div className="ss-topbar-profgroup">
+          <span className="ss-topbar-signedin" aria-label={isAuthenticated ? "Signed in" : "Guest"}>
+            {isAuthenticated ? "Signed in" : "Guest"}
           </span>
-        </button>
-      </div>
-
-      <nav id="ss-topbar-menu" className={`ss-topbar-menu ${menuOpen ? "is-open" : ""}`} aria-label="Topbar navigation">
-        <div className="ss-topbar-menu-inner">
-          {nav.map((n) => (
-            <NavLink
-              key={n.to}
-              to={n.to}
-              end={n.to === "/dashboard"}
-              className={({ isActive }) => `ss-topbar-link ${isActive ? "is-active" : ""}`}
-              aria-label={n.label}
-            >
-              {n.label}
-            </NavLink>
-          ))}
+          <TopbarProfileDropdown />
         </div>
-      </nav>
+      </div>
     </header>
   );
 }
