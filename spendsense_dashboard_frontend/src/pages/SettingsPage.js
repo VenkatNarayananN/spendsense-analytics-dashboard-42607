@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Chip, PageHeader } from "../components/ui";
+import { useAuth } from "../auth/AuthProvider";
 import { usePreferences } from "../state/preferences";
 
 function isValidCurrency(code) {
@@ -26,10 +27,25 @@ function fileToDataUrl(file) {
 export default function SettingsPage() {
   /** Settings: editable profile, user preferences, and demo mode toggle (analytics pages only). */
   const { prefs, setPrefs, profile, setProfile } = usePreferences();
+  const { user, loading: authLoading } = useAuth();
 
   const [nameDraft, setNameDraft] = useState(profile.name || "");
   const [budgetDraft, setBudgetDraft] = useState(String(prefs.monthlyBudget ?? 0));
   const [saving, setSaving] = useState(false);
+
+  // When auth resolves, mirror basic fields into the local profile model for display.
+  // This keeps the page usable in demo mode while showing real user email when available.
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+
+    setProfile((p) => ({
+      ...p,
+      email: user.email || p.email,
+      // Prefer locally edited name; only populate from user metadata if empty.
+      name: p.name || user.user_metadata?.full_name || user.user_metadata?.name || p.name,
+    }));
+  }, [authLoading, setProfile, user]);
 
   const currencyOptions = useMemo(() => ["USD", "EUR", "GBP", "CAD", "AUD"], []);
 
