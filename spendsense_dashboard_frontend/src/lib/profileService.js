@@ -3,10 +3,19 @@ import { getAuthedClient } from "./authedSupabase";
 /**
  * Profile service helpers for Supabase-backed profile CRUD + avatar storage.
  *
- * Assumptions:
+ * Supabase integration points:
+ * - Database reads/writes use PostgREST via `supabase.from("profiles")`.
+ * - Avatar upload uses Supabase Storage via `supabase.storage.from("avatars")`.
+ *
+ * Assumptions (must match Supabase configuration):
  * - `profiles` table has primary key `id` referencing `auth.users(id)`
  * - fields: full_name, phone, avatar_url
  * - Storage bucket: `avatars`
+ *
+ * Policy/RLS expectation:
+ * - `profiles` table uses RLS so users can only access their own row (id = auth.uid()).
+ * - `storage.objects` policies restrict access to files under `avatars/{auth.uid()}/...`.
+ *   See `assets/supabase.md` for the exact SQL.
  */
 
 /**

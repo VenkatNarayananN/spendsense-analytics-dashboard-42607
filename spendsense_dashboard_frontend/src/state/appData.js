@@ -16,6 +16,15 @@ import { createTransaction as createTransactionDb, dismissAlert as dismissAlertD
  * - Centralizes transactions + alerts (Supabase-backed).
  * - Seeds demo data per user on first login/empty DB.
  * - Provides refresh methods for pages.
+ *
+ * Supabase integration points:
+ * - CRUD is performed via `src/lib/transactionsAlertsService.js` (PostgREST calls).
+ * - Initial read + seeding are performed via `src/lib/demoSeedService.js`.
+ * - Realtime subscriptions are established via `src/lib/realtimeService.js`.
+ *
+ * RLS expectation:
+ * The database must enforce row ownership such that the authenticated user can only
+ * read/write rows where `user_id = auth.uid()` (see `assets/supabase.md`).
  */
 
 const AppDataContext = createContext(null);

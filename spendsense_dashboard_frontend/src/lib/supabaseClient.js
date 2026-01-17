@@ -13,8 +13,16 @@ import { createClient } from "@supabase/supabase-js";
 
 /**
  * Env wiring:
- * - CRA exposes only REACT_APP_* at build time.
+ * - CRA exposes only REACT_APP_* at build time (values are inlined into the bundle).
+ * - The primary supported env vars for this repo are:
+ *   - REACT_APP_SUPABASE_URL
+ *   - REACT_APP_SUPABASE_KEY
  * - We also support common fallback names to reduce misconfig friction in other environments.
+ *
+ * Supabase integration point:
+ * This is the single place where the frontend decides whether Supabase is "configured".
+ * Call-sites should use `isSupabaseConfigured` / `isSupabaseConfiguredFn()` and then use
+ * `getSupabase()` or the `getAuthedClient()` helper.
  */
 /** @type {string | undefined} */
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;

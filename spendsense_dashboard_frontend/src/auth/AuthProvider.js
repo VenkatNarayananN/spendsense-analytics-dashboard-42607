@@ -4,9 +4,19 @@ import { getSupabase, isSupabaseConfiguredFn } from "../lib/supabaseClient";
 /**
  * Auth provider backed by Supabase.
  *
+ * Supabase integration points:
+ * - Reads the Supabase client from `src/lib/supabaseClient.js`.
+ * - Uses `supabase.auth.getSession()` to resolve the initial session.
+ * - Uses `supabase.auth.onAuthStateChange(...)` to keep React state in sync with:
+ *   login/logout/token refresh.
+ *
  * Demo-mode behavior:
- * - If Supabase env vars are missing, the app remains fully functional.
- * - Auth methods become safe no-ops that warn instead of crashing.
+ * - If Supabase env vars are missing, the app remains navigable (no hard crash).
+ * - Auth methods become safe no-ops that warn instead of throwing.
+ *
+ * Operational note:
+ * If sign-in appears "disabled", check the `/login` diagnostics panel which reads from
+ * `getSupabaseDiagnostics()` and confirms that the frontend bundle has the expected env vars.
  */
 
 const AuthContext = createContext(null);

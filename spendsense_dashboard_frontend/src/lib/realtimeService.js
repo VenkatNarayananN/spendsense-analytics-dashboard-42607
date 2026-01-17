@@ -3,10 +3,15 @@ import { getAuthedClient } from "./authedSupabase";
 /**
  * Realtime subscriptions for SpendSense tables.
  *
- * Notes:
- * - Uses supabase-js Realtime Channels.
+ * Supabase integration points:
+ * - Uses supabase-js Realtime Channels (postgres_changes).
  * - Subscriptions are scoped by `user_id` in the filter string; this requires `user_id` to exist on rows.
+ * - The Supabase project must have Realtime enabled for the relevant tables.
  * - Callers must hold onto the returned channel and unsubscribe on cleanup.
+ *
+ * RLS note:
+ * Realtime delivery is still subject to auth context; ensure the client is authenticated and the
+ * tables/policies are configured according to `assets/supabase.md`.
  */
 
 /**
