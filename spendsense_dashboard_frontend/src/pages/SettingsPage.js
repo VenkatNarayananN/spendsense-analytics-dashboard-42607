@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Chip, PageHeader } from "../components/ui";
 import { useAuth } from "../auth/AuthProvider";
 import { usePreferences } from "../state/preferences";
+import { useAppData } from "../state/appData";
+import { isSupabaseConfiguredFn } from "../lib/supabaseClient";
 import Logo from "../components/Logo";
 
 function isValidCurrency(code) {
@@ -28,11 +30,16 @@ function fileToDataUrl(file) {
 export default function SettingsPage() {
   /** Settings: editable profile, user preferences, and demo mode toggle (analytics pages only). */
   const { prefs, setPrefs, profile, setProfile } = usePreferences();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const { generateSampleDataAction, seedingState } = useAppData();
+
+  const supabaseConfigured = isSupabaseConfiguredFn();
 
   const [nameDraft, setNameDraft] = useState(profile.name || "");
   const [budgetDraft, setBudgetDraft] = useState(String(prefs.monthlyBudget ?? 0));
   const [saving, setSaving] = useState(false);
+
+  const [sampleStatus, setSampleStatus] = useState({ tone: "primary", text: "" });
 
   // When auth resolves, mirror basic fields into the local profile model for display.
   // This keeps the page usable in demo mode while showing real user email when available.
@@ -211,6 +218,74 @@ export default function SettingsPage() {
 
           <p className="ss-card-caption" style={{ marginTop: 10 }}>
             Demo mode affects only: Dashboard, Transactions, Insights, Alerts. Profile settings are always editable.
+          </p>
+        </Card>
+
+        <Card
+          title="Demo data"
+          caption="One-click seeding: generate realistic per-user transactions and alerts in Supabase."
+          right={sampleStatus?.text ? <Chip tone={sampleStatus.tone}>{sampleStatus.text}</Chip> : null}
+        >
+          <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+            <p style={{ marginTop: 0 }}>
+              This adds a bounded set of sample transactions and alerts to <code>public.transactions</code> and <code>public.alerts</code> for your user.
+              It does not delete existing data.
+            </p>
+          </div>
+
+          {!supabaseConfigured ? (
+            <p className="ss-card-caption" style={{ marginBottom: 0 }}>
+              Supabase is not configured. Set <code>REACT_APP_SUPABASE_URL</code> and <code>REACT_APP_SUPABASE_KEY</code> to enable Live seeding.
+            </p>
+          ) : !isAuthenticated ? (
+            <p className="ss-card-caption" style={{ marginBottom: 0 }}>
+              Please sign in to generate sample data for your account.
+            </p>
+          ) : null}
+
+          <div style={{ height: 10 }} />
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+            <Button
+              onClick={async () => {
+                setSampleStatus({ tone: "primary", text: "" });
+
+                const res = await generateSampleDataAction({ transactionsCount: 24, days: 60, includeAlerts: true });
+
+                if (!res?.ok) {
+                  setSampleStatus({ tone: "error", text: res?.error?.message || "Failed" });
+                  return;
+                }
+
+                setSampleStatus({
+                  tone: "success",
+                  text: `Added ${res.details?.transactions || 0} tx`,
+                });
+              }}
+              disabled={!supabaseConfigured || !isAuthenticated || seedingState?.status === "running"}
+              aria-label="Generate sample data"
+            >
+              {seedingState?.status === "running" ? "Generating…" : "Generate sample data"}
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={() => setSampleStatus({ tone: "primary", text: "" })}
+              disabled={seedingState?.status === "running"}
+              aria-label="Clear sample data status"
+            >
+              Clear status
+            </Button>
+
+            {seedingState?.message ? (
+              <span className="ss-card-caption" style={{ margin: 0 }}>
+                {seedingState.message}
+              </span>
+            ) : null}
+          </div>
+
+          <p className="ss-card-caption" style={{ marginTop: 10 }}>
+            If this fails, verify Supabase RLS policies allow <strong>insert</strong> into your own rows (user_id = auth.uid()).
           </p>
         </Card>
       </div>

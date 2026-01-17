@@ -174,6 +174,85 @@ export async function seedDemoDataIfEmpty(userId) {
   }
 }
 
+/**
+ * PUBLIC_INTERFACE
+ * Force-generate sample data for a user (one-click demo seed).
+ *
+ * Safety:
+ * - Inserts are scoped to the authenticated user_id (RLS should enforce this).
+ * - Bounded insert sizes (defaults: 24 tx, 4 alerts) so it cannot create huge datasets accidentally.
+ * - Non-destructive: does not delete existing data.
+ *
+ * @param {string} userId
+ * @param {{transactionsCount?:number, days?:number, currency?:string, includeAlerts?:boolean}} [options]
+ * @returns {Promise<{ok:true, seeded:boolean, details?:any} | {ok:false, seeded:boolean, error:Error}>}
+ */
+export async function generateSampleData(userId, options = {}) {
+  const supabase = getAuthedClient();
+  if (!supabase) return { ok: false, seeded: false, error: new Error("Supabase not configured") };
+  if (!userId) return { ok: false, seeded: false, error: new Error("Missing userId") };
+
+  const txCount = Math.max(5, Math.min(60, Number(options.transactionsCount ?? 24)));
+  const days = Math.max(10, Math.min(180, Number(options.days ?? 60)));
+  const currency = String(options.currency || "USD").trim() || "USD";
+  const includeAlerts = options.includeAlerts !== false;
+
+  try {
+    const seed = seedFromUserId(userId) + Date.now(); // vary each click
+
+    const demoTx = generateDemoTransactions({ seed, count: txCount, days, currency });
+
+    const createdAt = new Date().toISOString();
+    const txRows = demoTx.map((t) => ({
+      user_id: userId,
+      merchant: t.merchant,
+      category: t.category,
+      amount: t.amount,
+      currency: t.currency,
+      transaction_date: toDateOnly(t.date),
+      status: "posted",
+      created_at: createdAt,
+    }));
+
+    // Alerts: keep them realistic but not noisy.
+    const alertRows = includeAlerts
+      ? [
+          ...buildDemoAlerts().slice(0, 3),
+          {
+            type: "Insight",
+            message: "Sample data generated. Explore trends in Dashboard and Insights.",
+            severity: "info",
+            is_read: false,
+            created_at: createdAt,
+          },
+        ].map((a) => ({
+          user_id: userId,
+          type: a.type,
+          message: a.message,
+          severity: a.severity,
+          is_read: a.is_read,
+          created_at: a.created_at,
+        }))
+      : [];
+
+    const [{ error: txInsertErr }, { error: alInsertErr }] = await Promise.all([
+      supabase.from("transactions").insert(txRows),
+      alertRows.length ? supabase.from("alerts").insert(alertRows) : Promise.resolve({ error: null }),
+    ]);
+
+    if (txInsertErr) throw txInsertErr;
+    if (alInsertErr) throw alInsertErr;
+
+    return {
+      ok: true,
+      seeded: true,
+      details: { transactions: txRows.length, alerts: alertRows.length },
+    };
+  } catch (e) {
+    return { ok: false, seeded: false, error: e };
+  }
+}
+
 function mapTxRowToUi(row) {
   return {
     id: row.id,

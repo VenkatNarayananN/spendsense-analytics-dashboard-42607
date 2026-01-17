@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { isSupabaseConfiguredFn } from "../lib/supabaseClient";
-import { seedDemoDataIfEmpty, fetchAlertsForUi, fetchTransactionsForUi } from "../lib/demoSeedService";
+import { seedDemoDataIfEmpty, fetchAlertsForUi, fetchTransactionsForUi, generateSampleData } from "../lib/demoSeedService";
 import { useAuth } from "../auth/AuthProvider";
 import { generateDemoTransactions, deriveAlerts as deriveAlertsFromTransactions } from "../mock/demoData";
 import { usePreferences } from "./preferences";
@@ -180,11 +180,41 @@ export function AppDataProvider({ children }) {
       if (!res.ok) return res;
 
       // Optimistic local update; realtime will reconcile too.
-      setAlerts((prev) => (Array.isArray(prev) ? prev.map((a) => (a.id === alertId ? { ...a, status: "resolved", is_read: true } : a)) : prev));
+      setAlerts((prev) =>
+        Array.isArray(prev) ? prev.map((a) => (a.id === alertId ? { ...a, status: "resolved", is_read: true } : a)) : prev
+      );
 
       return res;
     },
     [isAuthenticated, supabaseConfigured, userId]
+  );
+
+  const generateSampleDataAction = useCallback(
+    async (options = {}) => {
+      if (!supabaseConfigured || !isAuthenticated || !userId) {
+        return { ok: false, error: new Error("Not authenticated or Supabase not configured") };
+      }
+
+      setSeedingState({ status: "running", message: "Generating sample data…" });
+
+      const res = await generateSampleData(userId, { currency: prefs.currency, ...options });
+
+      if (!res.ok) {
+        warnNonFatal("Generate sample data failed (non-fatal):", res.error);
+        setSeedingState({
+          status: "failed",
+          message: "Could not generate sample data. Check Supabase policies (RLS) and try again.",
+        });
+        return res;
+      }
+
+      setSeedingState({ status: "done", message: `Sample data added (${res.details?.transactions || 0} tx, ${res.details?.alerts || 0} alerts).` });
+
+      // Refresh lists so the UI updates immediately.
+      await loadAll({ attemptSeed: false });
+      return res;
+    },
+    [isAuthenticated, loadAll, prefs.currency, supabaseConfigured, userId]
   );
 
   // Realtime subscriptions: keep lists in sync while the user is authenticated.
@@ -227,6 +257,7 @@ export function AppDataProvider({ children }) {
       refreshAll,
       createTransaction,
       dismissAlert,
+      generateSampleDataAction,
     }),
     [
       alerts,
@@ -239,6 +270,7 @@ export function AppDataProvider({ children }) {
       transactions,
       createTransaction,
       dismissAlert,
+      generateSampleDataAction,
     ]
   );
 
