@@ -1,36 +1,13 @@
-import React, { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { useTheme } from "../state/theme";
 import AppLogo from "./AppLogo";
+import PageContext from "./PageContext";
 import TopbarProfileDropdown from "./TopbarProfileDropdown";
-
-function titleForPath(pathname) {
-  if (pathname === "/dashboard" || pathname === "/") return "Dashboard";
-  if (pathname.startsWith("/transactions")) return "Transactions";
-  if (pathname.startsWith("/insights")) return "Insights";
-  if (pathname.startsWith("/alerts")) return "Alerts";
-  if (pathname.startsWith("/settings")) return "Settings";
-  if (pathname.startsWith("/profile")) return "Profile";
-  if (pathname.startsWith("/login")) return "Login";
-  return "SpendSense";
-}
-
-const nav = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/transactions", label: "Transactions" },
-  { to: "/insights", label: "Insights" },
-  { to: "/alerts", label: "Alerts" },
-  { to: "/settings", label: "Settings" },
-];
 
 // PUBLIC_INTERFACE
 export default function Navbar({ onToggleSidebar }) {
   /** Top navigation bar for authenticated users. */
-  const loc = useLocation();
-  const navigate = useNavigate();
-  const title = useMemo(() => titleForPath(loc.pathname), [loc.pathname]);
-
   const { isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -50,12 +27,13 @@ export default function Navbar({ onToggleSidebar }) {
           </span>
         </button>
 
+        {/* Brand (left column): AppLogo + SpendSense text (responsive via CSS) */}
         <AppLogo variant="full" size="sm" alt="SpendSense logo" className="ss-topbar-logo" />
+      </div>
 
-        <div className="ss-topbar-titles" style={{ minWidth: 0 }}>
-          <div className="ss-topbar-title">{title}</div>
-          <div className="ss-topbar-subtitle">Modern fintech UI</div>
-        </div>
+      {/* Page context (middle column): dynamic title/subtitle from route */}
+      <div className="ss-topbar-center" aria-label="Page context">
+        <PageContext />
       </div>
 
       <div className="ss-topbar-right">
