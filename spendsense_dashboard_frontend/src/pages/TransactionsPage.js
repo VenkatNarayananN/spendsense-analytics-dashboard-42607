@@ -15,6 +15,28 @@ function fmtCurrency(n, currency = "USD") {
   }
 }
 
+function toISODateInput(value) {
+  if (!value) return "";
+  try {
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+  } catch {
+    return "";
+  }
+}
+
+function inDateRange(txDate, fromISO, toISO) {
+  const d = toISODateInput(txDate);
+  if (!d) return true;
+  if (fromISO && d < fromISO) return false;
+  if (toISO && d > toISO) return false;
+  return true;
+}
+
+function safeLower(s) {
+  return String(s || "").toLowerCase();
+}
 
 // PUBLIC_INTERFACE
 export default function TransactionsPage() {
@@ -30,6 +52,7 @@ export default function TransactionsPage() {
     createTransaction,
   } = useAppData();
 
+  // --- Create transaction modal state (existing) ---
   const [newTxOpen, setNewTxOpen] = useState(false);
   const [newTx, setNewTx] = useState(() => ({
     date: new Date().toISOString().slice(0, 10),
@@ -40,6 +63,16 @@ export default function TransactionsPage() {
   }));
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
+
+  // --- Filters row state (new) ---
+  // Matches reference: "Search", "From" and "To", "Category", and a right-side sort control.
+  const [filters, setFilters] = useState(() => ({
+    q: "",
+    from: "",
+    to: "",
+    category: "",
+    sort: "date_desc", // date_desc | date_asc | amount_desc | amount_asc
+  }));
 
   useEffect(() => {
     // Keep currency aligned with preferences unless user already typed one.
@@ -104,6 +137,56 @@ export default function TransactionsPage() {
     return Array.isArray(ctxTransactions) ? ctxTransactions : [];
   }, [ctxTransactions]);
 
+  const categories = useMemo(() => {
+    const set = new Set();
+    for (const r of rows) {
+      const c = String(r?.category || "").trim();
+      if (c) set.add(c);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    const q = safeLower(filters.q).trim();
+    const cat = String(filters.category || "").trim();
+    const from = filters.from || "";
+    const to = filters.to || "";
+
+    let out = rows.filter((r) => {
+      if (cat && String(r.category || "") !== cat) return false;
+      if (!inDateRange(r.date, from, to)) return false;
+
+      if (!q) return true;
+      // Search across merchant/category/amount/currency/date (kept simple + fast).
+      const hay =
+        `${r.date ?? ""} ${r.merchant ?? ""} ${r.category ?? ""} ${r.amount ?? ""} ${r.currency ?? ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+    const sortKey = filters.sort || "date_desc";
+    const dir = sortKey.endsWith("_asc") ? 1 : -1;
+
+    const byDate = (a, b) => {
+      const da = toISODateInput(a?.date);
+      const db = toISODateInput(b?.date);
+      // Lex compare works for ISO yyyy-mm-dd.
+      if (da === db) return 0;
+      return da > db ? 1 * dir : -1 * dir;
+    };
+
+    const byAmount = (a, b) => {
+      const na = Number(a?.amount ?? 0);
+      const nb = Number(b?.amount ?? 0);
+      if (na === nb) return 0;
+      return na > nb ? 1 * dir : -1 * dir;
+    };
+
+    if (sortKey.startsWith("amount_")) out = [...out].sort(byAmount);
+    else out = [...out].sort(byDate);
+
+    return out;
+  }, [rows, filters]);
+
   const columns = useMemo(
     () => [
       { key: "date", header: "Date" },
@@ -129,15 +212,108 @@ export default function TransactionsPage() {
     </div>
   );
 
+  const clearFilters = () =>
+    setFilters({
+      q: "",
+      from: "",
+      to: "",
+      category: "",
+      sort: "date_desc",
+    });
+
   return (
     <main role="main" aria-label="Transactions" className="ss-transactions-page">
-      <PageHeader
-        title="Transactions"
-        description="Search, filter, and review your transactions."
-        right={topRight}
-      />
+      <PageHeader title="Transactions" description="Search, filter, and review your transactions." right={topRight} />
 
-      <div className="ss-transactions-spacer" />
+      {/* Filters row (matches provided reference) */}
+      <section className="ss-filterbar" aria-label="Transaction filters" style={{ marginBottom: 12 }}>
+        <div className="ss-filterbar-inner">
+          <div className="ss-filterbar-left" style={{ flex: "1 1 auto", minWidth: 0 }}>
+            <label style={{ minWidth: 240, flex: "1 1 260px" }}>
+              <span className="ss-muted" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
+                Search
+              </span>
+              <input
+                className="ss-input"
+                value={filters.q}
+                onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))}
+                placeholder="Search merchant, category, amount…"
+                aria-label="Search transactions"
+              />
+            </label>
+
+            <label style={{ minWidth: 150, flex: "0 1 170px" }}>
+              <span className="ss-muted" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
+                From
+              </span>
+              <input
+                className="ss-input"
+                type="date"
+                value={filters.from}
+                onChange={(e) => setFilters((p) => ({ ...p, from: e.target.value }))}
+                aria-label="Filter from date"
+              />
+            </label>
+
+            <label style={{ minWidth: 150, flex: "0 1 170px" }}>
+              <span className="ss-muted" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
+                To
+              </span>
+              <input
+                className="ss-input"
+                type="date"
+                value={filters.to}
+                onChange={(e) => setFilters((p) => ({ ...p, to: e.target.value }))}
+                aria-label="Filter to date"
+              />
+            </label>
+
+            <label style={{ minWidth: 190, flex: "0 1 220px" }}>
+              <span className="ss-muted" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
+                Category
+              </span>
+              <select
+                className="ss-select"
+                value={filters.category}
+                onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value }))}
+                aria-label="Filter by category"
+              >
+                <option value="">All</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
+              <Button variant="ghost" onClick={clearFilters} aria-label="Clear filters">
+                Clear
+              </Button>
+            </div>
+          </div>
+
+          <div className="ss-filterbar-right" style={{ alignItems: "flex-end" }}>
+            <label style={{ minWidth: 220 }}>
+              <span className="ss-muted" style={{ display: "block", fontSize: 12, marginBottom: 6 }}>
+                Sort
+              </span>
+              <select
+                className="ss-select"
+                value={filters.sort}
+                onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value }))}
+                aria-label="Sort transactions"
+              >
+                <option value="date_desc">Date (Newest)</option>
+                <option value="date_asc">Date (Oldest)</option>
+                <option value="amount_desc">Amount (High → Low)</option>
+                <option value="amount_asc">Amount (Low → High)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </section>
 
       {seedingState?.status === "failed" || dataError ? (
         <div className="ss-card" role="status" aria-label="Data status message">
@@ -165,7 +341,7 @@ export default function TransactionsPage() {
                   "Loading transactions…"
                 ) : (
                   <>
-                    Showing <strong>{rows.length}</strong> results.
+                    Showing <strong>{filteredRows.length}</strong> results.
                   </>
                 )}
               </p>
@@ -177,7 +353,7 @@ export default function TransactionsPage() {
 
           <DataTable
             columns={columns}
-            rows={rows}
+            rows={filteredRows}
             pageSize={10}
             isLoading={isLoading}
             emptySlot={
@@ -339,4 +515,3 @@ export default function TransactionsPage() {
     </main>
   );
 }
-
