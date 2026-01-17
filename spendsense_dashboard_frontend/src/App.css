@@ -1275,6 +1275,42 @@ a {
   }
 }
 
+/* ---------- Transactions page (layout match) ---------- */
+
+.ss-transactions-page {
+  /* Keeps the page feeling airy like the reference screenshot */
+}
+
+.ss-transactions-spacer {
+  height: 14px;
+}
+
+.ss-transactions-card {
+  /* visual consistency with other pages */
+}
+
+.ss-transactions-cardpad {
+  /* Slightly tighter than default card padding, like the reference table card */
+  padding-top: 14px;
+}
+
+.ss-transactions-cardhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ss-transactions-cardhead-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-height: 1px;
+}
+
 /* ---------- Realtime “Live” indicator ---------- */
 
 .ss-live {

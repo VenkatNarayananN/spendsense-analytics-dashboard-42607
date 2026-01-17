@@ -130,14 +130,14 @@ export default function TransactionsPage() {
   );
 
   return (
-    <main role="main" aria-label="Transactions">
+    <main role="main" aria-label="Transactions" className="ss-transactions-page">
       <PageHeader
         title="Transactions"
         description="Search, filter, and review your transactions."
         right={topRight}
       />
 
-      <div style={{ height: 12 }} />
+      <div className="ss-transactions-spacer" />
 
       {seedingState?.status === "failed" || dataError ? (
         <div className="ss-card" role="status" aria-label="Data status message">
@@ -155,20 +155,25 @@ export default function TransactionsPage() {
       ) : null}
 
       {/* Table card like the reference */}
-      <section className="ss-card" aria-label="Transactions table">
-        <div className="ss-card-pad" style={{ paddingTop: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+      <section className="ss-card ss-transactions-card" aria-label="Transactions table">
+        <div className="ss-card-pad ss-transactions-cardpad">
+          <div className="ss-transactions-cardhead">
             <div>
               <h3 className="ss-card-title">Transactions</h3>
               <p className="ss-card-caption">
-                {isLoading ? "Loading transactions…" : <>Showing <strong>{rows.length}</strong> results.</>}
+                {isLoading ? (
+                  "Loading transactions…"
+                ) : (
+                  <>
+                    Showing <strong>{rows.length}</strong> results.
+                  </>
+                )}
               </p>
             </div>
 
-            <div />
+            {/* Reserved for future table-level actions; kept to match reference spacing */}
+            <div className="ss-transactions-cardhead-right" />
           </div>
-
-          <div style={{ height: 12 }} />
 
           <DataTable
             columns={columns}
