@@ -117,7 +117,7 @@ export default function AlertsPage() {
         <div className="ss-card" role="status" aria-label="Data status message">
           <div className="ss-card-pad">
             <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              <strong style={{ color: "var(--ss-text-primary)" }}>Notice:</strong>{" "}
               {seedingState?.status === "failed" ? seedingState.message : dataError}
               <div style={{ height: 8 }} />
               <Button variant="ghost" onClick={() => refreshAlerts()} aria-label="Retry loading alerts">
@@ -133,7 +133,15 @@ export default function AlertsPage() {
           {isLoading ? (
             <div style={{ display: "grid", gap: 10 }}>
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} style={{ padding: 12, borderRadius: 16, border: "1px solid var(--ss-border)", background: "rgba(255,255,255,0.02)" }}>
+                <div
+                  key={i}
+                  style={{
+                    padding: 12,
+                    borderRadius: 16,
+                    border: "1px solid var(--ss-border-color)",
+                    background: "color-mix(in srgb, var(--ss-card-bg) 45%, transparent)",
+                  }}
+                >
                   <div className="ss-skeleton" style={{ height: 12, width: "78%", borderRadius: 999 }} />
                   <div style={{ height: 8 }} />
                   <div className="ss-skeleton" style={{ height: 12, width: "55%", borderRadius: 999 }} />
@@ -162,8 +170,8 @@ export default function AlertsPage() {
                   style={{
                     padding: 12,
                     borderRadius: 16,
-                    border: "1px solid var(--ss-border)",
-                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid var(--ss-border-color)",
+                    background: "color-mix(in srgb, var(--ss-card-bg) 45%, transparent)",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>

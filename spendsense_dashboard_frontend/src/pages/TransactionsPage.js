@@ -189,7 +189,7 @@ export default function TransactionsPage() {
         left={
           <>
             <div style={{ position: "relative", minWidth: 260, flex: "1 1 320px" }}>
-              <span style={{ position: "absolute", left: 12, top: 11, color: "rgba(255,255,255,0.55)" }}>
+              <span style={{ position: "absolute", left: 12, top: 11, color: "var(--ss-text-secondary)" }}>
                 <IconSearch />
               </span>
               <input
@@ -367,7 +367,7 @@ export default function TransactionsPage() {
         <div className="ss-card" role="status" aria-label="Data status message">
           <div className="ss-card-pad">
             <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              <strong style={{ color: "var(--ss-text-primary)" }}>Notice:</strong>{" "}
               {seedingState?.status === "failed" ? seedingState.message : dataError}
               <div style={{ height: 8 }} />
               <Button variant="ghost" onClick={() => refreshTransactions()} aria-label="Retry loading transactions">

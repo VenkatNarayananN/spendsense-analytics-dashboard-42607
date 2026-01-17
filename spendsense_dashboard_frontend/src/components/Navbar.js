@@ -62,8 +62,8 @@ export default function Navbar({ onToggleSidebar }) {
           alt="SpendSense"
           style={{
             borderRadius: 14,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(148,163,184,0.18)",
+            background: "color-mix(in srgb, var(--ss-card-bg) 45%, transparent)",
+            border: "1px solid var(--ss-border-color)",
           }}
         />
 

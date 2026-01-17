@@ -122,8 +122,9 @@ export default function LoginPage() {
             <div
               className="ss-card-caption"
               style={{
-                border: "1px solid rgba(244, 114, 182, 0.35)",
-                background: "linear-gradient(135deg, rgba(244, 114, 182, 0.10), rgba(245, 158, 11, 0.08))",
+                border: "1px solid var(--ss-border-color)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--ss-card-bg) 88%, var(--ss-secondary) 12%), color-mix(in srgb, var(--ss-card-bg) 92%, var(--ss-primary) 8%))",
                 padding: 10,
                 borderRadius: 12,
                 marginBottom: 10,

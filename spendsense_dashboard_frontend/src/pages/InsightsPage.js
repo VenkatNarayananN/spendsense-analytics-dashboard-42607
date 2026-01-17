@@ -144,7 +144,7 @@ export default function InsightsPage() {
         <div className="ss-card" role="status" aria-label="Data status message">
           <div className="ss-card-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              <strong style={{ color: "var(--ss-text-primary)" }}>Notice:</strong>{" "}
               {seedingState?.status === "failed" ? seedingState.message : dataError}
             </div>
             <button type="button" className="ss-btn ss-btn-ghost" onClick={() => refreshAll()} aria-label="Retry loading data">
