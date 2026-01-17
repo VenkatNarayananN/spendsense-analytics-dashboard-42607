@@ -82,10 +82,10 @@ export default function Navbar({ onToggleSidebar }) {
 
         {/* Profile control (avatar/initials + name/email) with dropdown actions */}
         <div className="ss-topbar-profgroup">
+          <TopbarProfileDropdown />
           <span className="ss-topbar-signedin" aria-label={isAuthenticated ? "Signed in" : "Guest"}>
             {isAuthenticated ? "Signed in" : "Guest"}
           </span>
-          <TopbarProfileDropdown />
         </div>
       </div>
     </header>
