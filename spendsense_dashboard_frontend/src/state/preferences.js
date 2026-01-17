@@ -50,6 +50,7 @@ export function PreferencesProvider({ children }) {
       // In a real app, email comes from auth provider and is read-only.
       email: "alex.morgan@spendsense.demo",
       name: "Alex Morgan",
+      phone: "",
       // Store a data URL string or external URL; keep optional.
       avatarUrl: "",
     })

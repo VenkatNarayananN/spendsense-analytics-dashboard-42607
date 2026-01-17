@@ -9,6 +9,7 @@ import TransactionsPage from "./pages/TransactionsPage";
 import InsightsPage from "./pages/InsightsPage";
 import AlertsPage from "./pages/AlertsPage";
 import SettingsPage from "./pages/SettingsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import ProtectedRoute from "./auth/ProtectedRoute";
@@ -175,20 +176,11 @@ function AppShell() {
                   }
                 />
 
-                {/* /profile is required by gating spec; page may be added in a later subtask.
-                    Keep it protected now so direct navigation is correctly gated. */}
                 <Route
                   path="/profile"
                   element={
                     <ProtectedRoute>
-                      <div style={{ padding: 16 }}>
-                        <div className="ss-card" style={{ padding: 16 }}>
-                          <div style={{ fontWeight: 800, marginBottom: 6 }}>Profile</div>
-                          <div className="ss-muted" style={{ fontSize: 13 }}>
-                            Profile page is not implemented yet.
-                          </div>
-                        </div>
-                      </div>
+                      <ProfilePage />
                     </ProtectedRoute>
                   }
                 />
