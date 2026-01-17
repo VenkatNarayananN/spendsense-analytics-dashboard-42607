@@ -2,7 +2,7 @@
  * Supabase client singleton for the SpendSense frontend.
  *
  * Usage:
- *   import { supabase, isSupabaseConfigured, getSupabase } from '../lib/supabaseClient';
+ *   import { supabase, isSupabaseConfigured, isSupabaseConfiguredFn, getSupabase } from '../lib/supabaseClient';
  *
  * Notes:
  * - This module is intentionally "safe" for demo mode: if env vars are missing,
@@ -23,6 +23,19 @@ const supabaseAnonKey = process.env.REACT_APP_SUPABASE_KEY;
  * @type {boolean}
  */
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+/**
+ * PUBLIC_INTERFACE
+ * Helper function to check whether Supabase is configured.
+ *
+ * Kept as a function for call-sites that prefer an explicit check (and for parity with
+ * other runtime-configured services), while still exporting the boolean constant above.
+ *
+ * @returns {boolean} True when both REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY are present.
+ */
+export function isSupabaseConfiguredFn() {
+  return isSupabaseConfigured;
+}
 
 // In development, log a concise warning if missing, but keep the app running for demo mode.
 if (!isSupabaseConfigured && process.env.NODE_ENV === 'development') {
