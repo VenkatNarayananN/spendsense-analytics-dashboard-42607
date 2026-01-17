@@ -8,14 +8,19 @@ const ASSETS = {
 };
 
 const SIZE_MAP = {
-  sm: { iconPx: 28, fullH: 26 },
-  md: { iconPx: 36, fullH: 32 },
-  lg: { iconPx: 48, fullH: 40 },
+  sm: { iconPx: 22, wordmarkPx: 13, gap: 8 },
+  md: { iconPx: 28, wordmarkPx: 14, gap: 10 },
+  lg: { iconPx: 38, wordmarkPx: 18, gap: 12 },
 };
 
 function sizeFor(size) {
   if (typeof size === "number") {
-    return { iconPx: size, fullH: Math.max(18, Math.round(size * 0.84)) };
+    const iconPx = size;
+    return {
+      iconPx,
+      wordmarkPx: Math.max(12, Math.round(iconPx * 0.52)),
+      gap: Math.max(6, Math.round(iconPx * 0.28)),
+    };
   }
   return SIZE_MAP[size] ?? SIZE_MAP.md;
 }
@@ -24,6 +29,10 @@ function sizeFor(size) {
  * PUBLIC_INTERFACE
  * SpendSense brand logo used across the app.
  *
+ * This component supports:
+ * - icon-only usage (topbar / collapsed areas)
+ * - icon + wordmark usage (auth headers, larger brand blocks)
+ *
  * Props:
  * - variant: "full" | "icon" (default: "full")
  * - size: "sm" | "md" | "lg" | number (default: "md")
@@ -31,6 +40,7 @@ function sizeFor(size) {
  * - to: optional override navigation target. If omitted, navigates to:
  *    authenticated -> /dashboard
  *    unauthenticated -> /login
+ * - showText: boolean (default: variant === "full")
  */
 export default function AppLogo({
   variant = "full",
@@ -41,63 +51,90 @@ export default function AppLogo({
   style = {},
   to,
   onClick,
+  showText,
 }) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  const { iconPx, fullH } = useMemo(() => sizeFor(size), [size]);
-
-  const src = variant === "icon" ? ASSETS.icon : ASSETS.full;
+  const { iconPx, wordmarkPx, gap } = useMemo(() => sizeFor(size), [size]);
 
   const a11yProps = decorative ? { alt: "", "aria-hidden": true } : { alt };
 
-  const clickable = Boolean(onClick) || to !== undefined || true;
+  // In this app, the logo is always clickable (navigates to dashboard/login).
   const dest = to ?? (isAuthenticated ? "/dashboard" : "/login");
-
-  // Keep a stable box to avoid layout shift while image loads.
-  const dims =
-    variant === "icon"
-      ? { width: iconPx, height: iconPx }
-      : { height: fullH, width: "auto" };
+  const textVisible = showText ?? variant === "full";
 
   return (
     <button
       type="button"
-      className={className}
+      className={`ss-applogo ${textVisible ? "is-full" : "is-icon"} ${className}`.trim()}
       onClick={(e) => {
         onClick?.(e);
         if (e.defaultPrevented) return;
-        // Always navigate by default per requirements.
         navigate(dest);
       }}
       aria-label="Go to SpendSense home"
       style={{
+        // IMPORTANT: by default, AppLogo should not bring its own “card/button chrome”.
+        // Surfaces (sidebar/topbar/auth) control background/border when needed.
         appearance: "none",
-        border: "1px solid color-mix(in srgb, var(--ss-border-color) 85%, transparent)",
-        background: "color-mix(in srgb, var(--ss-card-bg) 40%, transparent)",
-        borderRadius: 16,
-        padding: variant === "icon" ? 6 : 8,
+        border: "none",
+        background: "transparent",
+        padding: 0,
+        margin: 0,
         display: "inline-flex",
         alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "var(--ss-shadow-sm)",
-        backdropFilter: "blur(10px)",
-        cursor: clickable ? "pointer" : "default",
-        lineHeight: 0,
+        justifyContent: "flex-start",
+        gap,
+        cursor: "pointer",
+        lineHeight: 1,
+        textAlign: "left",
         ...style,
       }}
     >
-      <img
-        src={src}
-        {...a11yProps}
+      <span
+        className="ss-applogo-iconwrap"
         style={{
-          ...dims,
-          objectFit: "contain",
-          display: "block",
-          // prevent pixelation/stretch: browser will scale but keep aspect
-          imageRendering: "auto",
+          width: iconPx,
+          height: iconPx,
+          borderRadius: 10,
+          flex: "0 0 auto",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "1px solid color-mix(in srgb, var(--ss-border-color) 92%, transparent)",
+          background: "color-mix(in srgb, var(--ss-card-bg) 42%, transparent)",
+          boxShadow: "var(--ss-shadow-sm)",
+          backdropFilter: "blur(10px)",
         }}
-      />
+      >
+        <img
+          src={ASSETS.icon}
+          {...a11yProps}
+          style={{
+            width: Math.round(iconPx * 0.92),
+            height: Math.round(iconPx * 0.92),
+            objectFit: "contain",
+            display: "block",
+            imageRendering: "auto",
+          }}
+        />
+      </span>
+
+      {textVisible ? (
+        <span
+          className="ss-applogo-wordmark"
+          style={{
+            fontSize: wordmarkPx,
+            fontWeight: 900,
+            letterSpacing: 0.1,
+            color: "var(--ss-text-strong)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          SpendSense
+        </span>
+      ) : null}
     </button>
   );
 }

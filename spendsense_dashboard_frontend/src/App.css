@@ -434,6 +434,31 @@ a {
   text-overflow: ellipsis;
 }
 
+/* ---------- AppLogo (icon + wordmark) ---------- */
+
+.ss-applogo {
+  min-width: 0;
+}
+
+.ss-applogo:focus-visible {
+  outline: none;
+  box-shadow: var(--ss-focus);
+  border-radius: 12px;
+}
+
+/* Topbar: show icon + SpendSense like reference, but hide wordmark on small widths */
+.ss-topbar-logo .ss-applogo-wordmark {
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: 0.1px;
+}
+
+@media (max-width: 520px) {
+  .ss-topbar-logo .ss-applogo-wordmark {
+    display: none;
+  }
+}
+
 .ss-content {
   padding: var(--ss-space-5);
   min-width: 0;

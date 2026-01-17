@@ -50,15 +50,7 @@ export default function Navbar({ onToggleSidebar }) {
           </span>
         </button>
 
-        <AppLogo
-          variant="icon"
-          size="sm"
-          alt="SpendSense logo"
-          className="ss-topbar-logo"
-          style={{
-            borderRadius: 16,
-          }}
-        />
+        <AppLogo variant="full" size="sm" alt="SpendSense logo" className="ss-topbar-logo" />
 
         <div className="ss-topbar-titles" style={{ minWidth: 0 }}>
           <div className="ss-topbar-title">{title}</div>

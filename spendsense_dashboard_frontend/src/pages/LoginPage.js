@@ -103,15 +103,32 @@ export default function LoginPage() {
     >
       <div style={{ width: "min(980px, 100%)", display: "grid", gap: 18, gridTemplateColumns: "1fr" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <AppLogo variant="full" size="lg" alt="SpendSense logo" />
-            <div>
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <AppLogo
+                variant="full"
+                size="lg"
+                alt="SpendSense logo"
+                style={{
+                  // auth header needs a subtle “badge” like other surfaces, while staying theme-consistent
+                  padding: 8,
+                  borderRadius: 14,
+                  border: "1px solid color-mix(in srgb, var(--ss-border-color) 85%, transparent)",
+                  background: "color-mix(in srgb, var(--ss-card-bg) 40%, transparent)",
+                  boxShadow: "var(--ss-shadow-sm)",
+                  backdropFilter: "blur(10px)",
+                }}
+              />
+            </div>
+
+            <div style={{ textAlign: "center" }}>
               <h1 className="ss-section-title" style={{ marginBottom: 6 }}>
                 Sign in
               </h1>
               <p className="ss-section-desc">Authenticate with Supabase to access your dashboard</p>
             </div>
           </div>
+
           <Chip tone="secondary" title="Authentication provider">
             Supabase Auth
           </Chip>
