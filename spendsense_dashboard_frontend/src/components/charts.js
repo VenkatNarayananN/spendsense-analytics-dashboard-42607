@@ -10,11 +10,12 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
-function fmtCurrency(n) {
+function fmtCurrency(n, currency = "USD") {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+    return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
   } catch {
-    return `$${n.toFixed(2)}`;
+    const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : currency === "INR" ? "₹" : "$";
+    return `${sym}${Number(n || 0).toFixed(2)}`;
   }
 }
 
@@ -23,7 +24,14 @@ function safeLen(v) {
 }
 
 // PUBLIC_INTERFACE
-export function AreaLineChart({ title, data, height = 180, isLoading = false, emptyMessage = "No data to chart yet." }) {
+export function AreaLineChart({
+  title,
+  data,
+  height = 180,
+  isLoading = false,
+  emptyMessage = "No data to chart yet.",
+  currency = "USD",
+}) {
   /** Simple area chart for time series. data: [{label, value}] */
   const isEmpty = !isLoading && safeLen(data) === 0;
 
@@ -115,10 +123,10 @@ export function AreaLineChart({ title, data, height = 180, isLoading = false, em
 
         {/* top/bottom labels */}
         <text x="6" y="16" fontSize="12" fill="var(--ss-chart-label, rgba(229,231,235,0.78))">
-          {fmtCurrency(max)}
+          {fmtCurrency(max, currency)}
         </text>
         <text x="6" y={height - 8} fontSize="12" fill="var(--ss-chart-label, rgba(229,231,235,0.78))">
-          {fmtCurrency(min)}
+          {fmtCurrency(min, currency)}
         </text>
       </svg>
     </figure>
@@ -126,7 +134,14 @@ export function AreaLineChart({ title, data, height = 180, isLoading = false, em
 }
 
 // PUBLIC_INTERFACE
-export function BarChart({ title, data, height = 180, isLoading = false, emptyMessage = "No data to chart yet." }) {
+export function BarChart({
+  title,
+  data,
+  height = 180,
+  isLoading = false,
+  emptyMessage = "No data to chart yet.",
+  currency = "USD",
+}) {
   /** Simple bar chart. data: [{label, value}] */
   const isEmpty = !isLoading && safeLen(data) === 0;
   const max = Math.max(...(Array.isArray(data) ? data.map((d) => d.value) : []), 1);

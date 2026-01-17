@@ -5,20 +5,74 @@ import { EmptyState, FilterBar } from "../components/ux";
 import { usePreferences } from "../state/preferences";
 import { useAppData } from "../state/appData";
 import { categoryHighlight, deriveDashboardMetrics, merchantHighlight, monthSpendComparison } from "../mock/demoData";
+import { fetchLatestFxRates, convertAmount, convertSeries } from "../lib/fxClient";
 
 function fmtCurrency(n, currency = "USD") {
   try {
     return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
   } catch {
-    return `$${Number(n || 0).toFixed(2)}`;
+    const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : currency === "INR" ? "₹" : "$";
+    return `${sym}${Number(n || 0).toFixed(2)}`;
   }
 }
 
 // PUBLIC_INTERFACE
 export default function DashboardPage() {
   /** Dashboard: realistic KPIs, category breakdown, spending trend, and plain-English highlights. */
-  const { prefs } = usePreferences();
+  const { prefs, setPrefs } = usePreferences();
   const { transactions: ctxTransactions, alerts: ctxAlerts, loadingData, dataError, seedingState, realtimeStatus, refreshAll } = useAppData();
+
+  const supportedDashboardCurrencies = useMemo(() => ["USD", "INR", "GBP", "EUR"], []);
+  const selectedCurrency = supportedDashboardCurrencies.includes(prefs.currency) ? prefs.currency : "USD";
+
+  const [fxState, setFxState] = useState(() => ({
+    status: "idle", // idle|loading|ready|error
+    base: "USD",
+    rates: null,
+    timestamp: "",
+    error: "",
+  }));
+
+  useEffect(() => {
+    // Only fetch FX when user switches away from USD (or when they choose USD we can reset).
+    let cancelled = false;
+
+    async function run() {
+      if (selectedCurrency === "USD") {
+        setFxState({ status: "idle", base: "USD", rates: null, timestamp: "", error: "" });
+        return;
+      }
+
+      setFxState((p) => ({ ...p, status: "loading", error: "" }));
+      try {
+        // Our backend supports base=USD (free plan), and computes cross-rates for other bases.
+        const payload = await fetchLatestFxRates({ base: "USD" });
+        if (cancelled) return;
+
+        setFxState({
+          status: "ready",
+          base: payload.base,
+          rates: payload.rates,
+          timestamp: payload.timestamp,
+          error: "",
+        });
+      } catch (err) {
+        if (cancelled) return;
+        setFxState({
+          status: "error",
+          base: "USD",
+          rates: null,
+          timestamp: "",
+          error: err?.message || "FX rates could not be loaded.",
+        });
+      }
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCurrency]);
 
   // Keep existing page-level skeleton behavior but also respect shared data loading state.
   const [pageWarmup, setPageWarmup] = useState(true);
@@ -31,6 +85,57 @@ export default function DashboardPage() {
   const transactions = useMemo(() => (Array.isArray(ctxTransactions) ? ctxTransactions : []), [ctxTransactions]);
 
   const metrics = useMemo(() => deriveDashboardMetrics(transactions, { monthlyBudget: prefs.monthlyBudget }), [transactions, prefs.monthlyBudget]);
+
+  const canConvert = selectedCurrency === "USD" || fxState.status === "ready";
+  const fxRates = fxState.rates;
+  const fxBase = fxState.base || "USD";
+  const fxMultiplierInfo = useMemo(() => {
+    if (selectedCurrency === "USD") return { ok: true, note: "" };
+    if (fxState.status === "loading") return { ok: false, note: "Loading FX rates…" };
+    if (fxState.status === "error") return { ok: false, note: "FX unavailable — showing USD values." };
+    return { ok: true, note: fxState.timestamp ? `Rates updated ${new Date(fxState.timestamp).toLocaleString()}` : "" };
+  }, [fxState.status, fxState.timestamp, selectedCurrency]);
+
+  const display = useMemo(() => {
+    const currency = selectedCurrency;
+    if (currency === "USD") {
+      return {
+        currency,
+        totalSpend: metrics.totalSpend,
+        avgDaily: metrics.avgDaily,
+        topCategory: metrics.topCategory,
+        monthlyBudget: prefs.monthlyBudget,
+        spendTrend: metrics.spendTrend,
+        categoryBreakdown: metrics.categoryBreakdown,
+      };
+    }
+
+    if (fxState.status !== "ready" || !fxRates) {
+      // Graceful fallback: keep USD numbers if we cannot convert.
+      return {
+        currency: "USD",
+        totalSpend: metrics.totalSpend,
+        avgDaily: metrics.avgDaily,
+        topCategory: metrics.topCategory,
+        monthlyBudget: prefs.monthlyBudget,
+        spendTrend: metrics.spendTrend,
+        categoryBreakdown: metrics.categoryBreakdown,
+      };
+    }
+
+    return {
+      currency,
+      totalSpend: convertAmount(metrics.totalSpend, currency, fxRates, fxBase),
+      avgDaily: convertAmount(metrics.avgDaily, currency, fxRates, fxBase),
+      topCategory: {
+        ...metrics.topCategory,
+        value: convertAmount(metrics.topCategory.value, currency, fxRates, fxBase),
+      },
+      monthlyBudget: convertAmount(prefs.monthlyBudget, currency, fxRates, fxBase),
+      spendTrend: convertSeries(metrics.spendTrend, currency, fxRates, fxBase),
+      categoryBreakdown: convertSeries(metrics.categoryBreakdown, currency, fxRates, fxBase),
+    };
+  }, [fxBase, fxRates, fxState.status, metrics, prefs.monthlyBudget, selectedCurrency]);
 
   const alerts = useMemo(() => (Array.isArray(ctxAlerts) ? ctxAlerts : []), [ctxAlerts]);
 
@@ -47,6 +152,37 @@ export default function DashboardPage() {
         description="A quick overview of this month’s spending, budget health, and category mix."
         right={
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <label className="ss-muted" style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <span>Currency</span>
+              <select
+                value={selectedCurrency}
+                onChange={(e) => {
+                  const next = String(e.target.value || "USD").toUpperCase();
+                  setPrefs((p) => ({ ...p, currency: next }));
+                }}
+                aria-label="Select dashboard currency"
+                className="ss-input"
+                style={{
+                  height: 36,
+                  borderRadius: 12,
+                  padding: "0 10px",
+                  background: "var(--ss-surface, #fff)",
+                }}
+              >
+                {supportedDashboardCurrencies.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedCurrency !== "USD" ? (
+              <Chip tone={fxState.status === "error" ? "warn" : fxState.status === "loading" ? "secondary" : "success"} title={fxState.error || ""}>
+                {fxMultiplierInfo.note || (canConvert ? "FX ready" : "FX")}
+              </Chip>
+            ) : null}
+
             {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.transactions} label="Live" /> : null}
           </div>
         }
@@ -57,8 +193,13 @@ export default function DashboardPage() {
         left={
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
             <Chip tone="primary">Current month</Chip>
-            <Chip tone="secondary">{prefs.currency}</Chip>
+            <Chip tone="secondary">{selectedCurrency}</Chip>
             <Chip tone={prefs.alertsEnabled ? "success" : "warn"}>{prefs.alertsEnabled ? "Alerts on" : "Alerts off"}</Chip>
+            {selectedCurrency !== "USD" && fxState.status === "error" ? (
+              <span className="ss-muted" style={{ fontSize: 12 }}>
+                FX service is unavailable right now — values shown in USD.
+              </span>
+            ) : null}
           </div>
         }
         right={<div className="ss-muted" style={{ fontSize: 12 }}>KPIs reflect the current calendar month</div>}
@@ -103,8 +244,8 @@ export default function DashboardPage() {
                 <div className="ss-skeleton" style={{ height: 28, width: 180, borderRadius: 12 }} />
               ) : (
                 <div className="ss-kpi">
-                  <strong>{fmtCurrency(metrics.totalSpend, prefs.currency)}</strong>
-                  <span className="ss-muted">budget {fmtCurrency(prefs.monthlyBudget, prefs.currency)}</span>
+                  <strong>{fmtCurrency(display.totalSpend, display.currency)}</strong>
+                  <span className="ss-muted">budget {fmtCurrency(display.monthlyBudget, display.currency)}</span>
                 </div>
               )}
             </Card>
@@ -114,18 +255,18 @@ export default function DashboardPage() {
                 <div className="ss-skeleton" style={{ height: 28, width: 160, borderRadius: 12 }} />
               ) : (
                 <div className="ss-kpi">
-                  <strong>{fmtCurrency(metrics.avgDaily, prefs.currency)}</strong>
+                  <strong>{fmtCurrency(display.avgDaily, display.currency)}</strong>
                   <span className="ss-muted">per active day</span>
                 </div>
               )}
             </Card>
 
-            <Card title="Top category" caption="Current month" right={isLoading ? null : <Chip tone="secondary">{metrics.topCategory.label}</Chip>}>
+            <Card title="Top category" caption="Current month" right={isLoading ? null : <Chip tone="secondary">{display.topCategory.label}</Chip>}>
               {isLoading ? (
                 <div className="ss-skeleton" style={{ height: 28, width: 140, borderRadius: 12 }} />
               ) : (
                 <div className="ss-kpi">
-                  <strong>{fmtCurrency(metrics.topCategory.value, prefs.currency)}</strong>
+                  <strong>{fmtCurrency(display.topCategory.value, display.currency)}</strong>
                   <span className="ss-muted">largest category total</span>
                 </div>
               )}
@@ -138,8 +279,16 @@ export default function DashboardPage() {
                 isLoading ? (
                   <span className="ss-skeleton" style={{ width: 54, height: 22, borderRadius: 999, display: "inline-block" }} />
                 ) : (
-                  <Chip tone={metrics.utilization >= 90 ? "error" : metrics.utilization >= 80 ? "warn" : "success"}>
-                    {Math.max(0, metrics.utilization)}%
+                  <Chip
+                    tone={
+                      (display.monthlyBudget > 0 ? Math.round((display.totalSpend / display.monthlyBudget) * 100) : 0) >= 90
+                        ? "error"
+                        : (display.monthlyBudget > 0 ? Math.round((display.totalSpend / display.monthlyBudget) * 100) : 0) >= 80
+                          ? "warn"
+                          : "success"
+                    }
+                  >
+                    {Math.max(0, display.monthlyBudget > 0 ? Math.round((display.totalSpend / display.monthlyBudget) * 100) : 0)}%
                   </Chip>
                 )
               }
@@ -156,7 +305,12 @@ export default function DashboardPage() {
                 >
                   <div
                     style={{
-                      width: isLoading ? "40%" : `${Math.min(100, Math.max(0, metrics.utilization))}%`,
+                      width: isLoading
+                        ? "40%"
+                        : `${Math.min(
+                            100,
+                            Math.max(0, display.monthlyBudget > 0 ? Math.round((display.totalSpend / display.monthlyBudget) * 100) : 0)
+                          )}%`,
                       height: "100%",
                       background: "linear-gradient(90deg, var(--ss-secondary), var(--ss-primary))",
                       transition: "width 220ms ease",
@@ -203,18 +357,20 @@ export default function DashboardPage() {
             <Card title="Spending trend" caption="Last 30 days">
               <AreaLineChart
                 title="Spending trend (last 30 days)"
-                data={metrics.spendTrend}
+                data={display.spendTrend}
                 isLoading={isLoading}
                 emptyMessage="No spending trend data yet."
+                currency={display.currency}
               />
             </Card>
 
             <Card title="Category breakdown" caption="Current month totals">
               <BarChart
                 title="Category breakdown"
-                data={metrics.categoryBreakdown}
+                data={display.categoryBreakdown}
                 isLoading={isLoading}
                 emptyMessage="No category totals yet."
+                currency={display.currency}
               />
             </Card>
           </div>
