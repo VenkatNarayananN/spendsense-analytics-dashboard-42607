@@ -17,6 +17,7 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import { PreferencesProvider } from "./state/preferences";
 import { AppDataProvider } from "./state/appData";
+import { ThemeProvider } from "./state/theme";
 
 function titleForPath(pathname) {
   if (pathname === "/" || pathname === "/dashboard") return "Dashboard";
@@ -217,11 +218,13 @@ export default function App() {
   /** App root that wires providers and renders the gated shell. */
   return (
     <AuthProvider>
-      <PreferencesProvider>
-        <AppDataProvider>
-          <AppShell />
-        </AppDataProvider>
-      </PreferencesProvider>
+      <ThemeProvider>
+        <PreferencesProvider>
+          <AppDataProvider>
+            <AppShell />
+          </AppDataProvider>
+        </PreferencesProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

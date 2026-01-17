@@ -70,3 +70,40 @@ export function PageHeader({ title, description, right }) {
     </div>
   );
 }
+
+// PUBLIC_INTERFACE
+export function LiveBadge({ status = "OFF", label = "Live" }) {
+  /**
+   * Small realtime indicator to communicate whether realtime subscriptions are active.
+   *
+   * status values are expected to be supabase-js channel status strings:
+   * - "SUBSCRIBED" => connected
+   * - "SUBSCRIBING" => connecting
+   * - anything else => disconnected
+   */
+  const normalized = String(status || "OFF").toUpperCase();
+
+  let cls = "ss-live is-disconnected";
+  let text = label;
+
+  if (normalized === "SUBSCRIBED") {
+    cls = "ss-live is-connected";
+    text = label;
+  } else if (normalized === "SUBSCRIBING") {
+    cls = "ss-live is-connecting";
+    text = "Connecting…";
+  } else if (normalized === "OFF") {
+    cls = "ss-live is-disconnected";
+    text = "Offline";
+  } else {
+    cls = "ss-live is-disconnected";
+    text = "Disconnected";
+  }
+
+  return (
+    <span className={cls} aria-label={`Realtime status: ${text}`} title={`Realtime status: ${normalized}`}>
+      <span className="ss-live-dot" aria-hidden="true" />
+      {text}
+    </span>
+  );
+}

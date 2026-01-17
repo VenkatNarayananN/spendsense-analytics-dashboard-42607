@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
-import { Button, Card, Chip, PageHeader } from "../components/ui";
+import { Button, Card, Chip, LiveBadge, PageHeader } from "../components/ui";
 import { IconSearch } from "../components/icons";
 import { EmptyState, FilterBar } from "../components/ux";
 import { parsers, useDebouncedValue, useURLQueryState } from "../components/urlState";
@@ -24,7 +24,15 @@ function clampAmountString(v) {
 export default function TransactionsPage() {
   /** Searchable + filterable transactions table with realistic demo data and URL-synced filters. */
   const { prefs } = usePreferences();
-  const { transactions: ctxTransactions, loadingData, dataError, seedingState, refreshTransactions, createTransaction } = useAppData();
+  const {
+    transactions: ctxTransactions,
+    loadingData,
+    dataError,
+    seedingState,
+    realtimeStatus,
+    refreshTransactions,
+    createTransaction,
+  } = useAppData();
 
   const [newTx, setNewTx] = useState(() => ({
     date: new Date().toISOString().slice(0, 10),
@@ -167,7 +175,12 @@ export default function TransactionsPage() {
       <PageHeader
         title="Transactions"
         description="Search, filter, and review your transactions."
-        right={<Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>}
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>
+            {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.transactions} label="Live" /> : null}
+          </div>
+        }
       />
 
       <FilterBar

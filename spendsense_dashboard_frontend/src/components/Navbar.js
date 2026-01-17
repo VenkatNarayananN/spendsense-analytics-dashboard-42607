@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Chip } from "./ui";
 import { useAuth } from "../auth/AuthProvider";
+import { useTheme } from "../state/theme";
 import Logo from "./Logo";
 import TopbarProfileDropdown from "./TopbarProfileDropdown";
 
@@ -32,6 +33,7 @@ export default function Navbar({ onToggleSidebar }) {
   const title = useMemo(() => titleForPath(loc.pathname), [loc.pathname]);
 
   const { isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close menu on route change
@@ -75,6 +77,18 @@ export default function Navbar({ onToggleSidebar }) {
         <div className="ss-topbar-status" style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {isAuthenticated ? <Chip tone="success">Signed in</Chip> : <Chip tone="secondary">Guest</Chip>}
         </div>
+
+        <button
+          type="button"
+          className="ss-icon-btn"
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+          title={`Theme: ${theme === "dark" ? "Dark" : "Light"}`}
+          onClick={() => toggleTheme()}
+        >
+          <span aria-hidden="true" style={{ fontWeight: 950, fontSize: 12 }}>
+            {theme === "dark" ? "Dark" : "Light"}
+          </span>
+        </button>
 
         {/* Profile control (avatar/initials + name/email) with dropdown actions */}
         <TopbarProfileDropdown />

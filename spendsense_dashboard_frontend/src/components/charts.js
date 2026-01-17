@@ -179,10 +179,17 @@ export function BarChart({ title, data, height = 180, isLoading = false, emptyMe
                 width={bw}
                 height={h}
                 rx="10"
-                fill="rgba(11,99,197,0.18)"
-                stroke="rgba(148,163,184,0.16)"
+                fill="color-mix(in srgb, var(--ss-chart-accent, #0B63C5) 18%, transparent)"
+                stroke="var(--ss-border, rgba(148,163,184,0.18))"
               />
-              <rect x={x} y={y} width={bw} height={Math.max(2, h * 0.6)} rx="10" fill="rgba(0,163,191,0.22)" />
+              <rect
+                x={x}
+                y={y}
+                width={bw}
+                height={Math.max(2, h * 0.6)}
+                rx="10"
+                fill="color-mix(in srgb, var(--ss-chart-line, #00A3BF) 22%, transparent)"
+              />
               <text
                 x={x + bw / 2}
                 y={height - 6}

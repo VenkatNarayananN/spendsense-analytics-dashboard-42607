@@ -45,7 +45,13 @@ export function subscribeToTransactionsRealtime(userId, onChange) {
       .subscribe((status) => {
         // eslint-disable-next-line no-console
         console.info("[realtime] transactions subscription status:", status);
+        // Expose status on the channel so UI can read it without deep-coupling to supabase-js internals.
+        // This is intentionally "best effort" and kept stable for UI purposes only.
+        channel.__ss_status = status;
       });
+
+    // Initialize immediately as "connecting" until callback fires.
+    channel.__ss_status = "SUBSCRIBING";
 
     return { ok: true, channel };
   } catch (e) {
@@ -84,7 +90,10 @@ export function subscribeToAlertsRealtime(userId, onChange) {
       .subscribe((status) => {
         // eslint-disable-next-line no-console
         console.info("[realtime] alerts subscription status:", status);
+        channel.__ss_status = status;
       });
+
+    channel.__ss_status = "SUBSCRIBING";
 
     return { ok: true, channel };
   } catch (e) {

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Button, Card, Chip, PageHeader } from "../components/ui";
+import { Button, Card, Chip, LiveBadge, PageHeader } from "../components/ui";
 import { EmptyState, FilterBar } from "../components/ux";
 import { usePreferences } from "../state/preferences";
 import { useAppData } from "../state/appData";
@@ -15,7 +15,7 @@ const severityTone = {
 export default function AlertsPage() {
   /** Alerts management: list, filters, and dismiss actions (demo-derived). This is the only page that manages alerts. */
   const { prefs } = usePreferences();
-  const { alerts: ctxAlerts, loadingData, dataError, seedingState, refreshAlerts, dismissAlert } = useAppData();
+  const { alerts: ctxAlerts, loadingData, dataError, seedingState, realtimeStatus, refreshAlerts, dismissAlert } = useAppData();
 
   const isLoading = Boolean(loadingData);
 
@@ -96,7 +96,12 @@ export default function AlertsPage() {
       <PageHeader
         title="Alerts"
         description="Review what needs attention and dismiss items you’ve already checked."
-        right={<Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>}
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>
+            {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.alerts} label="Live" /> : null}
+          </div>
+        }
       />
 
       <FilterBar

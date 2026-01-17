@@ -3,6 +3,9 @@
      Theme change note (maintainers): Replaces prior fintech cyan/indigo styling with ocean gradient tokens and
      ensures components consume CSS variables for consistent palette usage across the app shell and UI primitives. */
 
+  /* Theme mode (managed by ThemeProvider via [data-ss-theme]) */
+  --ss-theme: dark;
+
   /* Brand */
   --ss-primary: #0b63c5; /* ocean blue */
   --ss-primary-2: #0e4d92; /* deep ocean blue */
@@ -73,6 +76,42 @@
   --ss-space-3: 16px;
   --ss-space-4: 24px;
   --ss-space-5: 32px;
+}
+
+/* Light theme overrides (same ocean brand, brighter surfaces) */
+:root[data-ss-theme="light"] {
+  --ss-theme: light;
+
+  --ss-bg: #f6fbff;
+  --ss-surface-900: #ffffff;
+  --ss-surface-800: #f2f7ff;
+  --ss-surface-700: #eaf1ff;
+
+  --ss-surface: var(--ss-surface-900);
+  --ss-surface-2: var(--ss-surface-800);
+  --ss-surface-3: rgba(2, 6, 23, 0.03);
+
+  --ss-text: #0f172a; /* slate-900 */
+  --ss-text-strong: #0b1220;
+  --ss-muted: rgba(15, 23, 42, 0.66);
+
+  --ss-border: rgba(15, 23, 42, 0.10);
+  --ss-border-strong: rgba(15, 23, 42, 0.18);
+
+  --ss-shadow-sm: 0 1px 1px rgba(15, 23, 42, 0.10), 0 1px 2px rgba(15, 23, 42, 0.08);
+  --ss-shadow-md: 0 10px 24px rgba(15, 23, 42, 0.12);
+  --ss-shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.16);
+
+  --ss-gradient-shell: linear-gradient(135deg, rgba(11, 99, 197, 0.18), rgba(0, 163, 191, 0.14));
+  --ss-gradient-surface: radial-gradient(900px 520px at 12% -8%, rgba(0, 163, 191, 0.14), transparent 60%),
+    radial-gradient(760px 420px at 92% 10%, rgba(11, 99, 197, 0.12), transparent 60%),
+    linear-gradient(180deg, #f6fbff 0%, #f6fbff 100%);
+
+  --ss-chart-grid: rgba(15, 23, 42, 0.10);
+  --ss-chart-label: rgba(15, 23, 42, 0.62);
+
+  --ss-focus: 0 0 0 4px rgba(0, 163, 191, 0.18);
+  --ss-focus-strong: 0 0 0 4px rgba(11, 99, 197, 0.18);
 }
 
 * {
@@ -289,6 +328,11 @@ a {
   box-shadow: var(--ss-shadow-sm);
 }
 
+/* Light theme: keep the same structure but use brighter surfaces */
+:root[data-ss-theme="light"] .ss-card {
+  background: rgba(255, 255, 255, 0.78);
+}
+
 .ss-card-pad {
   padding: var(--ss-space-4);
 }
@@ -424,6 +468,11 @@ a {
   padding: 10px 12px;
   font-size: 13px;
   color: var(--ss-text);
+}
+
+:root[data-ss-theme="light"] .ss-input,
+:root[data-ss-theme="light"] .ss-select {
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .ss-input::placeholder {
@@ -731,6 +780,10 @@ a {
   backdrop-filter: blur(12px);
 }
 
+:root[data-ss-theme="light"] .ss-topbar-menu {
+  background: rgba(255, 255, 255, 0.90);
+}
+
 .ss-topbar-menu.is-open {
   opacity: 1;
   transform: translateY(0);
@@ -1006,6 +1059,61 @@ a {
   }
   100% {
     background-position: 200% 0%;
+  }
+}
+
+/* ---------- Realtime “Live” indicator ---------- */
+
+.ss-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ss-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ss-text);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  user-select: none;
+}
+
+:root[data-ss-theme="light"] .ss-live {
+  background: rgba(255, 255, 255, 0.90);
+}
+
+.ss-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ss-muted);
+  box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.0);
+}
+
+.ss-live.is-connected .ss-live-dot {
+  background: var(--ss-success);
+  animation: ss-live-pulse 1.25s ease-in-out infinite;
+}
+
+.ss-live.is-connecting .ss-live-dot {
+  background: var(--ss-warn);
+  animation: ss-live-pulse 1.6s ease-in-out infinite;
+}
+
+.ss-live.is-disconnected .ss-live-dot {
+  background: var(--ss-error);
+}
+
+@keyframes ss-live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.20);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgba(22, 163, 74, 0.0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.0);
   }
 }
 

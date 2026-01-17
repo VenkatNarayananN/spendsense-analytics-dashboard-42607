@@ -226,29 +226,58 @@ export function AppDataProvider({ children }) {
     [isAuthenticated, loadAll, prefs.currency, supabaseConfigured, userId]
   );
 
+  // Realtime connection statuses for small UI indicators (e.g., “Live” badge).
+  // Values are derived from supabase-js channel status strings.
+  const [realtimeStatus, setRealtimeStatus] = useState(() => ({
+    transactions: "OFF",
+    alerts: "OFF",
+  }));
+
   // Realtime subscriptions: keep lists in sync while the user is authenticated.
   useEffect(() => {
-    if (!supabaseConfigured || !isAuthenticated || !userId) return () => {};
+    if (!supabaseConfigured || !isAuthenticated || !userId) {
+      setRealtimeStatus({ transactions: "OFF", alerts: "OFF" });
+      return () => {};
+    }
 
     let txChannel = null;
     let alertChannel = null;
     let cancelled = false;
+
+    setRealtimeStatus({ transactions: "SUBSCRIBING", alerts: "SUBSCRIBING" });
 
     const txSub = subscribeToTransactionsRealtime(userId, () => {
       // Debounced by nature of the refresh call; simplest reliable approach is to re-fetch.
       if (cancelled) return;
       refreshTransactions();
     });
-    if (txSub.ok) txChannel = txSub.channel;
+    if (txSub.ok) {
+      txChannel = txSub.channel;
+    } else {
+      setRealtimeStatus((p) => ({ ...p, transactions: "ERROR" }));
+    }
 
     const alSub = subscribeToAlertsRealtime(userId, () => {
       if (cancelled) return;
       refreshAlerts();
     });
-    if (alSub.ok) alertChannel = alSub.channel;
+    if (alSub.ok) {
+      alertChannel = alSub.channel;
+    } else {
+      setRealtimeStatus((p) => ({ ...p, alerts: "ERROR" }));
+    }
+
+    // Poll is intentionally lightweight; supabase-js does not provide a stable event emitter for status.
+    const interval = window.setInterval(() => {
+      if (cancelled) return;
+      const txStatus = txChannel?.__ss_status || (txChannel ? "SUBSCRIBING" : "ERROR");
+      const alStatus = alertChannel?.__ss_status || (alertChannel ? "SUBSCRIBING" : "ERROR");
+      setRealtimeStatus({ transactions: txStatus, alerts: alStatus });
+    }, 400);
 
     return () => {
       cancelled = true;
+      window.clearInterval(interval);
       unsubscribeRealtimeChannel(txChannel);
       unsubscribeRealtimeChannel(alertChannel);
     };
@@ -261,6 +290,7 @@ export function AppDataProvider({ children }) {
       loadingData,
       dataError,
       seedingState,
+      realtimeStatus,
       refreshTransactions,
       refreshAlerts,
       refreshAll,
@@ -277,6 +307,7 @@ export function AppDataProvider({ children }) {
       refreshTransactions,
       seedingState,
       transactions,
+      realtimeStatus,
       createTransaction,
       dismissAlert,
       generateSampleDataAction,
