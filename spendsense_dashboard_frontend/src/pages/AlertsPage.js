@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, Chip, LiveBadge, PageHeader } from "../components/ui";
 import { EmptyState } from "../components/ux";
 import { usePreferences } from "../state/preferences";
@@ -28,6 +29,7 @@ function formatUiDate(dateStr) {
 // PUBLIC_INTERFACE
 export default function AlertsPage() {
   /** Alerts management: list, filters, create (live) and dismiss actions. */
+  const navigate = useNavigate();
   const { prefs } = usePreferences();
   const {
     alerts: ctxAlerts,
@@ -274,7 +276,7 @@ export default function AlertsPage() {
             <EmptyState
               title="Alerts are turned off"
               description="Enable alerts in Settings if you want to see budget and anomaly notifications."
-              primaryAction={{ label: "Go to settings", onClick: () => (window.location.href = "/settings"), variant: "primary" }}
+              primaryAction={{ label: "Go to settings", onClick: () => navigate("/settings"), variant: "primary" }}
               secondaryAction={{ label: "Reset filters", onClick: resetFilters, variant: "ghost" }}
             />
           ) : alerts.length === 0 ? (
