@@ -9,6 +9,7 @@ body {
     "Segoe UI Emoji";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #fdf2f8;
-  color: #374151;
+
+  background: #0b1220;
+  color: rgba(255, 255, 255, 0.92);
 }

@@ -1,26 +1,41 @@
 :root {
-  /* SpendSense — Elegant Rose Gold Theme */
-  --ss-primary: #f472b6;
-  --ss-secondary: #f59e0b;
-  --ss-success: #10b981;
+  /* SpendSense — Modern Fintech Theme (Dark sidebar/topbar + cool neutrals + teal/cyan accents) */
+
+  /* Brand */
+  --ss-primary: #22d3ee; /* cyan */
+  --ss-secondary: #6366f1; /* indigo */
+  --ss-success: #10b981; /* emerald */
+  --ss-warn: #f59e0b;
   --ss-error: #ef4444;
 
-  --ss-bg: #fdf2f8; /* rose-50 like */
-  --ss-surface: #ffffff;
-  --ss-text: #374151;
+  /* Surfaces */
+  --ss-bg: #0b1220; /* app background */
+  --ss-surface: #0f172a; /* elevated panels */
+  --ss-surface-2: #111827; /* deeper cards */
+  --ss-surface-3: rgba(255, 255, 255, 0.03); /* subtle overlay */
 
-  --ss-border: rgba(55, 65, 81, 0.12);
-  --ss-muted: rgba(55, 65, 81, 0.66);
+  /* Text */
+  --ss-text: rgba(255, 255, 255, 0.92);
+  --ss-text-strong: #ffffff;
+  --ss-muted: rgba(255, 255, 255, 0.68);
 
-  --ss-radius-lg: 18px;
-  --ss-radius-md: 14px;
+  /* Borders + shadows */
+  --ss-border: rgba(148, 163, 184, 0.18); /* slate-300 with alpha */
+  --ss-border-strong: rgba(148, 163, 184, 0.28);
+
+  --ss-radius-lg: 14px;
+  --ss-radius-md: 12px;
   --ss-radius-sm: 10px;
 
-  --ss-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06), 0 1px 1px rgba(17, 24, 39, 0.04);
-  --ss-shadow-md: 0 10px 20px rgba(17, 24, 39, 0.08);
+  --ss-shadow-sm: 0 1px 1px rgba(2, 6, 23, 0.35), 0 1px 2px rgba(2, 6, 23, 0.28);
+  --ss-shadow-md: 0 10px 24px rgba(2, 6, 23, 0.45);
+  --ss-shadow-lg: 0 18px 48px rgba(2, 6, 23, 0.55);
 
-  --ss-gradient: linear-gradient(135deg, #fff1f2 0%, #faf5ff 100%); /* rose-50 -> purple-50 */
-  --ss-focus: 0 0 0 4px rgba(244, 114, 182, 0.25);
+  --ss-gradient: radial-gradient(1200px 600px at 20% -10%, rgba(34, 211, 238, 0.12), transparent 60%),
+    radial-gradient(1000px 500px at 90% 0%, rgba(99, 102, 241, 0.12), transparent 55%),
+    linear-gradient(180deg, #0b1220 0%, #0b1220 100%);
+
+  --ss-focus: 0 0 0 4px rgba(34, 211, 238, 0.22);
 
   --ss-font: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
     "Segoe UI Emoji";
@@ -78,12 +93,13 @@ a {
   min-height: 100vh;
 }
 
+/* Sidebar + topbar use the same dark surface for a fintech feel */
 .ss-sidebar {
   position: sticky;
   top: 0;
   height: 100vh;
   padding: var(--ss-space-4) var(--ss-space-3);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(15, 23, 42, 0.86);
   backdrop-filter: blur(10px);
   border-right: 1px solid var(--ss-border);
 }
@@ -100,7 +116,7 @@ a {
   width: 40px;
   height: 40px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--ss-primary), #a78bfa);
+  background: linear-gradient(135deg, rgba(34, 211, 238, 1), rgba(99, 102, 241, 1));
   box-shadow: var(--ss-shadow-sm);
 }
 
@@ -113,6 +129,7 @@ a {
 .ss-brand-title strong {
   font-size: 14px;
   letter-spacing: 0.2px;
+  color: var(--ss-text-strong);
 }
 
 .ss-brand-title span {
@@ -136,22 +153,22 @@ a {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 14px;
-  color: rgba(55, 65, 81, 0.82);
+  border-radius: var(--ss-radius-md);
+  color: rgba(255, 255, 255, 0.78);
   border: 1px solid transparent;
   transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
 
 .ss-nav-item:hover {
-  background: rgba(244, 114, 182, 0.08);
-  border-color: rgba(244, 114, 182, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(34, 211, 238, 0.25);
   transform: translateY(-1px);
 }
 
 .ss-nav-item[aria-current="page"] {
-  background: rgba(244, 114, 182, 0.12);
-  border-color: rgba(244, 114, 182, 0.3);
-  color: var(--ss-text);
+  background: rgba(34, 211, 238, 0.10);
+  border-color: rgba(34, 211, 238, 0.30);
+  color: var(--ss-text-strong);
 }
 
 .ss-nav-icon {
@@ -160,10 +177,11 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .ss-nav-label {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
 }
 
@@ -182,7 +200,7 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--ss-space-4);
-  background: rgba(255, 255, 255, 0.74);
+  background: rgba(15, 23, 42, 0.76);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--ss-border);
 }
@@ -198,6 +216,7 @@ a {
   font-size: 16px;
   font-weight: 800;
   letter-spacing: 0.2px;
+  color: var(--ss-text-strong);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -231,7 +250,7 @@ a {
 
 /* ---------- UI primitives ---------- */
 .ss-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(17, 24, 39, 0.72);
   border: 1px solid var(--ss-border);
   border-radius: var(--ss-radius-lg);
   box-shadow: var(--ss-shadow-sm);
@@ -250,9 +269,10 @@ a {
 }
 
 .ss-card-title {
-  font-weight: 800;
+  font-weight: 850;
   font-size: 14px;
   margin: 0;
+  color: var(--ss-text-strong);
 }
 
 .ss-card-caption {
@@ -271,6 +291,7 @@ a {
 .ss-kpi strong {
   font-size: 28px;
   letter-spacing: -0.4px;
+  color: var(--ss-text-strong);
 }
 
 .ss-kpi span {
@@ -285,43 +306,50 @@ a {
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
   border: 1px solid transparent;
   white-space: nowrap;
 }
 
 .ss-chip-primary {
-  background: rgba(244, 114, 182, 0.14);
-  border-color: rgba(244, 114, 182, 0.22);
-  color: #9d174d;
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.26);
+  color: rgba(34, 211, 238, 0.95);
 }
 
 .ss-chip-secondary {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.22);
-  color: #92400e;
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.26);
+  color: rgba(165, 180, 252, 0.98);
 }
 
 .ss-chip-success {
-  background: rgba(16, 185, 129, 0.14);
-  border-color: rgba(16, 185, 129, 0.22);
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.26);
+  color: rgba(16, 185, 129, 0.98);
+}
+
+.ss-chip-warn {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.26);
+  color: rgba(245, 158, 11, 0.98);
 }
 
 .ss-chip-error {
   background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.2);
-  color: #991b1b;
+  border-color: rgba(239, 68, 68, 0.26);
+  color: rgba(248, 113, 113, 0.98);
 }
 
 .ss-btn {
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: var(--ss-radius-md);
   padding: 10px 12px;
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
-  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease, background 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease, background 120ms ease,
+    border-color 120ms ease;
 }
 
 .ss-btn:disabled {
@@ -330,41 +358,49 @@ a {
 }
 
 .ss-btn-primary {
-  background: linear-gradient(135deg, var(--ss-primary), #fb7185);
-  color: white;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 1), rgba(16, 185, 129, 1));
+  color: rgba(2, 6, 23, 0.95);
   box-shadow: var(--ss-shadow-sm);
 }
 
 .ss-btn-secondary {
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.22);
-  color: #92400e;
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.28);
+  color: rgba(224, 231, 255, 0.98);
 }
 
 .ss-btn-ghost {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.03);
   border-color: var(--ss-border);
-  color: rgba(55, 65, 81, 0.86);
+  color: rgba(255, 255, 255, 0.86);
 }
 
 .ss-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: var(--ss-shadow-md);
+  border-color: var(--ss-border-strong);
 }
 
 .ss-input,
 .ss-select {
   width: 100%;
   border: 1px solid var(--ss-border);
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--ss-radius-md);
   padding: 10px 12px;
   font-size: 13px;
   color: var(--ss-text);
 }
 
 .ss-input::placeholder {
-  color: rgba(55, 65, 81, 0.45);
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.ss-input:focus,
+.ss-select:focus {
+  outline: none;
+  box-shadow: var(--ss-focus);
+  border-color: rgba(34, 211, 238, 0.35);
 }
 
 .ss-toolbar {
@@ -400,13 +436,13 @@ a {
 
 .ss-table th {
   text-align: left;
-  color: rgba(55, 65, 81, 0.8);
-  font-weight: 800;
-  background: rgba(253, 242, 248, 0.6);
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 850;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .ss-table tr:hover td {
-  background: rgba(244, 114, 182, 0.06);
+  background: rgba(34, 211, 238, 0.04);
 }
 
 .ss-pagination {
@@ -425,6 +461,7 @@ a {
   margin: 0 0 6px 0;
   font-weight: 900;
   font-size: 18px;
+  color: var(--ss-text-strong);
 }
 
 .ss-section-desc {
@@ -439,48 +476,150 @@ a {
   margin: var(--ss-space-4) 0;
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 1024px) {
-  .ss-content {
-    padding: var(--ss-space-4);
-  }
-  .ss-grid-3 {
-    grid-template-columns: 1fr;
-  }
-  .ss-grid-2 {
-    grid-template-columns: 1fr;
-  }
+/* ---------- Filter bar + responsive drawer ---------- */
+.ss-filterbar {
+  border-radius: var(--ss-radius-lg);
+  border: 1px solid var(--ss-border);
+  background: rgba(17, 24, 39, 0.52);
+  box-shadow: var(--ss-shadow-sm);
+}
+
+.ss-filterbar-inner {
+  padding: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.ss-filterbar-left,
+.ss-filterbar-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ss-filterbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ss-filter-drawer-toggle {
+  display: none;
 }
 
 @media (max-width: 860px) {
-  .ss-shell {
-    grid-template-columns: var(--ss-sidebar-w-collapsed) 1fr;
+  .ss-filter-drawer-toggle {
+    display: inline-flex;
   }
 
-  .ss-brand-title {
+  .ss-filterbar-right {
     display: none;
   }
 
-  .ss-nav-label {
-    display: none;
+  .ss-filter-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: 1fr;
+    background: rgba(2, 6, 23, 0.56);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
   }
 
-  .ss-sidebar {
-    padding: var(--ss-space-3) var(--ss-space-2);
+  .ss-filter-drawer.is-open {
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  .ss-nav-item {
-    justify-content: center;
-    padding: 12px 10px;
+  .ss-filter-drawer-panel {
+    margin: auto;
+    width: min(520px, calc(100vw - 24px));
+    border-radius: 18px;
+    border: 1px solid var(--ss-border);
+    background: rgba(15, 23, 42, 0.96);
+    box-shadow: var(--ss-shadow-lg);
+    padding: 14px;
+  }
+
+  .ss-filter-drawer-panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--ss-text-strong);
+  }
+
+  .ss-filter-drawer-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ss-filter-drawer-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
   }
 }
 
-@media (max-width: 520px) {
-  .ss-content {
-    padding: var(--ss-space-3);
+/* ---------- Empty state ---------- */
+.ss-empty {
+  border-radius: var(--ss-radius-lg);
+  border: 1px dashed rgba(148, 163, 184, 0.32);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 18px;
+  text-align: center;
+}
+
+.ss-empty-title {
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--ss-text-strong);
+}
+
+.ss-empty-desc {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ss-muted);
+}
+
+.ss-empty-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ---------- Skeletons (shimmer) ---------- */
+.ss-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.10);
+}
+
+.ss-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+  transform: translateX(-120%);
+  animation: ss-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes ss-shimmer {
+  0% {
+    transform: translateX(-120%);
   }
-  .ss-topbar {
-    padding: 0 var(--ss-space-3);
+  100% {
+    transform: translateX(120%);
   }
 }
 
@@ -489,8 +628,8 @@ a {
 .ss-icon-btn {
   appearance: none;
   border: 1px solid var(--ss-border);
-  background: rgba(255, 255, 255, 0.72);
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--ss-radius-md);
   height: 40px;
   width: 40px;
   display: inline-flex;
@@ -498,13 +637,15 @@ a {
   justify-content: center;
   cursor: pointer;
   box-shadow: var(--ss-shadow-sm);
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, border-color 120ms ease;
+  color: rgba(255, 255, 255, 0.84);
 }
 
 .ss-icon-btn:hover {
   transform: translateY(-1px);
   box-shadow: var(--ss-shadow-md);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--ss-border-strong);
 }
 
 .ss-burger {
@@ -518,7 +659,7 @@ a {
 .ss-burger span {
   height: 2px;
   border-radius: 999px;
-  background: rgba(55, 65, 81, 0.72);
+  background: rgba(255, 255, 255, 0.70);
 }
 
 .ss-dots {
@@ -534,7 +675,7 @@ a {
   width: 4px;
   height: 4px;
   border-radius: 999px;
-  background: rgba(55, 65, 81, 0.55);
+  background: rgba(255, 255, 255, 0.55);
   align-self: center;
 }
 
@@ -543,7 +684,7 @@ a {
   top: calc(var(--ss-topbar-h) - 8px);
   right: var(--ss-space-4);
   width: min(420px, calc(100vw - 24px));
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(15, 23, 42, 0.96);
   border: 1px solid var(--ss-border);
   border-radius: 18px;
   box-shadow: var(--ss-shadow-md);
@@ -568,35 +709,35 @@ a {
 
 .ss-topbar-link {
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 850;
   font-size: 12px;
   padding: 10px 12px;
   border-radius: 999px;
   border: 1px solid var(--ss-border);
-  background: rgba(253, 242, 248, 0.45);
-  color: rgba(55, 65, 81, 0.86);
-  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.86);
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 
 .ss-topbar-link:hover {
   transform: translateY(-1px);
   box-shadow: var(--ss-shadow-sm);
-  background: rgba(244, 114, 182, 0.10);
-  border-color: rgba(244, 114, 182, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(34, 211, 238, 0.25);
 }
 
 .ss-topbar-link.is-active {
-  background: rgba(244, 114, 182, 0.14);
-  border-color: rgba(244, 114, 182, 0.30);
-  color: var(--ss-text);
+  background: rgba(34, 211, 238, 0.10);
+  border-color: rgba(34, 211, 238, 0.28);
+  color: var(--ss-text-strong);
 }
 
 /* Chart skeleton placeholders */
 .ss-chart-skeleton {
   width: 100%;
   border-radius: 18px;
-  border: 1px dashed rgba(244, 114, 182, 0.35);
-  background: rgba(253, 242, 248, 0.5);
+  border: 1px dashed rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.02);
   position: relative;
   overflow: hidden;
   display: grid;
@@ -611,17 +752,12 @@ a {
 .ss-chart-shimmer {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(244, 114, 182, 0.06),
-    rgba(245, 158, 11, 0.08),
-    rgba(167, 139, 250, 0.06)
-  );
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.05), rgba(99, 102, 241, 0.06), rgba(34, 211, 238, 0.05));
   background-size: 200% 100%;
-  animation: ss-shimmer 1.2s ease-in-out infinite;
+  animation: ss-chart-shimmer 1.2s ease-in-out infinite;
 }
 
-@keyframes ss-shimmer {
+@keyframes ss-chart-shimmer {
   0% {
     background-position: 0% 0%;
   }
@@ -637,8 +773,19 @@ a {
   padding: 0;
 }
 
+@media (max-width: 1024px) {
+  .ss-content {
+    padding: var(--ss-space-4);
+  }
+  .ss-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .ss-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 860px) {
-  /* Keep topbar menu button visible; burger toggles sidebar drawer behavior */
   .ss-topbar-burger {
     display: inline-flex;
   }
@@ -664,7 +811,7 @@ a {
     position: fixed;
     inset: 0;
     z-index: 25;
-    background: rgba(17, 24, 39, 0.18);
+    background: rgba(2, 6, 23, 0.56);
     backdrop-filter: blur(1px);
     opacity: 0;
     pointer-events: none;
@@ -676,12 +823,20 @@ a {
     pointer-events: auto;
   }
 
-  /* Let the main column take full width; sidebar becomes overlay drawer */
   .ss-shell {
     grid-template-columns: 1fr;
   }
 
   .ss-main {
     min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .ss-content {
+    padding: var(--ss-space-3);
+  }
+  .ss-topbar {
+    padding: 0 var(--ss-space-3);
   }
 }

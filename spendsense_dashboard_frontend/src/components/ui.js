@@ -25,11 +25,12 @@ export function Card({ title, caption, right, children, className = "" }) {
 
 // PUBLIC_INTERFACE
 export function Chip({ tone = "primary", children, title }) {
-  /** Badge/Chip for severity/status/tags. tone: primary|secondary|success|error */
+  /** Badge/Chip for severity/status/tags. tone: primary|secondary|success|warn|error */
   const map = {
     primary: "ss-chip ss-chip-primary",
     secondary: "ss-chip ss-chip-secondary",
     success: "ss-chip ss-chip-success",
+    warn: "ss-chip ss-chip-warn",
     error: "ss-chip ss-chip-error",
   };
   return (

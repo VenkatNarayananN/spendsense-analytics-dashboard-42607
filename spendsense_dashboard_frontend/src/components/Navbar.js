@@ -54,7 +54,7 @@ export default function Navbar({ onToggleSidebar }) {
 
         <div style={{ minWidth: 0 }}>
           <div className="ss-topbar-title">{title}</div>
-          <div className="ss-topbar-subtitle">Elegant Rose Gold • mock data</div>
+          <div className="ss-topbar-subtitle">Modern fintech UI • mock data</div>
         </div>
       </div>
 

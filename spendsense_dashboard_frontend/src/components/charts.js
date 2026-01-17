@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { EmptyState } from "./ux";
 
 /**
  * Minimal SVG charts designed to be "drop-in replaceable" later.
@@ -17,10 +18,18 @@ function fmtCurrency(n) {
   }
 }
 
+function safeLen(v) {
+  return Array.isArray(v) ? v.length : 0;
+}
+
 // PUBLIC_INTERFACE
-export function AreaLineChart({ title, data, height = 180 }) {
+export function AreaLineChart({ title, data, height = 180, isLoading = false, emptyMessage = "No data to chart yet." }) {
   /** Simple area chart for time series. data: [{label, value}] */
+  const isEmpty = !isLoading && safeLen(data) === 0;
+
   const { points, min, max } = useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return { points: [], min: 0, max: 0 };
+
     const vals = data.map((d) => d.value);
     const minV = Math.min(...vals);
     const maxV = Math.max(...vals);
@@ -39,9 +48,7 @@ export function AreaLineChart({ title, data, height = 180 }) {
 
   const path = useMemo(() => {
     if (points.length === 0) return "";
-    return points
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-      .join(" ");
+    return points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
   }, [points]);
 
   const area = useMemo(() => {
@@ -49,6 +56,26 @@ export function AreaLineChart({ title, data, height = 180 }) {
     const h = height;
     return `${path} L ${points[points.length - 1].x.toFixed(2)} ${h} L ${points[0].x.toFixed(2)} ${h} Z`;
   }, [path, points, height]);
+
+  if (isLoading) {
+    return (
+      <figure aria-label={title} style={{ margin: 0 }}>
+        <div className="ss-chart-skeleton" style={{ height }} role="img" aria-label={`${title} loading`}>
+          <div className="ss-chart-shimmer" aria-hidden="true" />
+        </div>
+      </figure>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <figure aria-label={title} style={{ margin: 0 }}>
+        <div style={{ height }}>
+          <EmptyState title={title || "Chart"} description={emptyMessage} />
+        </div>
+      </figure>
+    );
+  }
 
   return (
     <figure aria-label={title} style={{ margin: 0 }}>
@@ -61,20 +88,20 @@ export function AreaLineChart({ title, data, height = 180 }) {
         style={{ display: "block" }}
       >
         <defs>
-          <linearGradient id="ssArea" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#F472B6" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#A78BFA" stopOpacity="0.06" />
+          <linearGradient id="ssAreaFin" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.30" />
+            <stop offset="100%" stopColor="#6366F1" stopOpacity="0.06" />
           </linearGradient>
         </defs>
 
-        <path d={area} fill="url(#ssArea)" />
-        <path d={path} fill="none" stroke="#F472B6" strokeWidth="3" />
+        <path d={area} fill="url(#ssAreaFin)" />
+        <path d={path} fill="none" stroke="#22D3EE" strokeWidth="3" />
 
         {/* top/bottom labels */}
-        <text x="6" y="16" fontSize="12" fill="rgba(55,65,81,0.65)">
+        <text x="6" y="16" fontSize="12" fill="rgba(255,255,255,0.70)">
           {fmtCurrency(max)}
         </text>
-        <text x="6" y={height - 8} fontSize="12" fill="rgba(55,65,81,0.65)">
+        <text x="6" y={height - 8} fontSize="12" fill="rgba(255,255,255,0.70)">
           {fmtCurrency(min)}
         </text>
       </svg>
@@ -83,9 +110,30 @@ export function AreaLineChart({ title, data, height = 180 }) {
 }
 
 // PUBLIC_INTERFACE
-export function BarChart({ title, data, height = 180 }) {
+export function BarChart({ title, data, height = 180, isLoading = false, emptyMessage = "No data to chart yet." }) {
   /** Simple bar chart. data: [{label, value}] */
-  const max = Math.max(...data.map((d) => d.value), 1);
+  const isEmpty = !isLoading && safeLen(data) === 0;
+  const max = Math.max(...(Array.isArray(data) ? data.map((d) => d.value) : []), 1);
+
+  if (isLoading) {
+    return (
+      <figure aria-label={title} style={{ margin: 0 }}>
+        <div className="ss-chart-skeleton" style={{ height }} role="img" aria-label={`${title} loading`}>
+          <div className="ss-chart-shimmer" aria-hidden="true" />
+        </div>
+      </figure>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <figure aria-label={title} style={{ margin: 0 }}>
+        <div style={{ height }}>
+          <EmptyState title={title || "Chart"} description={emptyMessage} />
+        </div>
+      </figure>
+    );
+  }
 
   return (
     <figure aria-label={title} style={{ margin: 0 }}>
@@ -99,15 +147,9 @@ export function BarChart({ title, data, height = 180 }) {
 
           return (
             <g key={d.label}>
-              <rect x={x} y={y} width={bw} height={h} rx="10" fill="rgba(245,158,11,0.35)" />
-              <rect x={x} y={y} width={bw} height={Math.max(2, h * 0.6)} rx="10" fill="rgba(244,114,182,0.35)" />
-              <text
-                x={x + bw / 2}
-                y={height - 6}
-                textAnchor="middle"
-                fontSize="11"
-                fill="rgba(55,65,81,0.65)"
-              >
+              <rect x={x} y={y} width={bw} height={h} rx="10" fill="rgba(99,102,241,0.26)" />
+              <rect x={x} y={y} width={bw} height={Math.max(2, h * 0.6)} rx="10" fill="rgba(34,211,238,0.26)" />
+              <text x={x + bw / 2} y={height - 6} textAnchor="middle" fontSize="11" fill="rgba(255,255,255,0.70)">
                 {d.label}
               </text>
             </g>

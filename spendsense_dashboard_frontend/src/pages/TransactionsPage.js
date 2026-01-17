@@ -1,8 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import { Button, Chip, PageHeader } from "../components/ui";
 import { IconSearch } from "../components/icons";
 import { getTransactionsMock } from "../mock/mockData";
+import { EmptyState, FilterBar } from "../components/ux";
+import { parsers, useDebouncedValue, useURLQueryState } from "../components/urlState";
 
 function fmtCurrency(n) {
   try {
@@ -14,26 +16,52 @@ function fmtCurrency(n) {
 
 const statusTone = {
   Cleared: "success",
-  Pending: "secondary",
+  Pending: "warn",
   Flagged: "error",
 };
 
+function clampAmountString(v) {
+  // Keep user input flexible; just trim spaces
+  return String(v ?? "").trim();
+}
+
 // PUBLIC_INTERFACE
 export default function TransactionsPage() {
-  /** Searchable + filterable transactions table using mock data. */
+  /** Searchable + filterable transactions table using mock data, with URL-synced filters. */
   const all = useMemo(() => getTransactionsMock(), []);
 
-  const [q, setQ] = useState("");
-  const [category, setCategory] = useState("All");
-  const [minAmount, setMinAmount] = useState("");
-  const [maxAmount, setMaxAmount] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  // URL-synced filters
+  const [filters, setFilters, resetFilters] = useURLQueryState({
+    q: { default: "", parse: parsers.string, serialize: (v) => String(v || "").trim() },
+    category: { default: "All", parse: parsers.string, serialize: (v) => String(v || "All") },
+    min: { default: "", parse: parsers.numberOrEmpty, serialize: (v) => String(v || "") },
+    max: { default: "", parse: parsers.numberOrEmpty, serialize: (v) => String(v || "") },
+    from: { default: "", parse: parsers.string, serialize: (v) => String(v || "") },
+    to: { default: "", parse: parsers.string, serialize: (v) => String(v || "") },
+  });
+
+  // Debounce only the search query to avoid excessive filter re-rendering and to improve typing feel.
+  const [qDraft, setQDraft] = useState(filters.q);
+  useEffect(() => setQDraft(filters.q), [filters.q]);
+  const qDebounced = useDebouncedValue(qDraft, 250);
+
+  useEffect(() => {
+    // Sync debounced query back into URL/state
+    setFilters((prev) => ({ ...prev, q: qDebounced }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qDebounced]);
 
   const categories = useMemo(() => ["All", ...Array.from(new Set(all.map((t) => t.category)))], [all]);
 
+  // Simulated loading to demonstrate skeleton UX while staying mock-data-based.
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    const t = window.setTimeout(() => setIsLoading(false), 450);
+    return () => window.clearTimeout(t);
+  }, []);
+
   const rows = useMemo(() => {
-    const qLower = q.trim().toLowerCase();
+    const qLower = String(filters.q || "").trim().toLowerCase();
 
     return all.filter((t) => {
       if (qLower) {
@@ -41,19 +69,19 @@ export default function TransactionsPage() {
         if (!text.includes(qLower)) return false;
       }
 
-      if (category !== "All" && t.category !== category) return false;
+      if (filters.category !== "All" && t.category !== filters.category) return false;
 
-      if (from && t.date < from) return false;
-      if (to && t.date > to) return false;
+      if (filters.from && t.date < filters.from) return false;
+      if (filters.to && t.date > filters.to) return false;
 
-      const min = minAmount === "" ? null : Number(minAmount);
-      const max = maxAmount === "" ? null : Number(maxAmount);
+      const min = filters.min === "" ? null : Number(filters.min);
+      const max = filters.max === "" ? null : Number(filters.max);
       if (min != null && t.amount < min) return false;
       if (max != null && t.amount > max) return false;
 
       return true;
     });
-  }, [all, q, category, minAmount, maxAmount, from, to]);
+  }, [all, filters]);
 
   const columns = useMemo(
     () => [
@@ -63,7 +91,7 @@ export default function TransactionsPage() {
       {
         key: "amount",
         header: "Amount",
-        render: (r) => <span style={{ fontWeight: 800 }}>{fmtCurrency(r.amount)}</span>,
+        render: (r) => <span style={{ fontWeight: 900 }}>{fmtCurrency(r.amount)}</span>,
       },
       {
         key: "status",
@@ -75,92 +103,126 @@ export default function TransactionsPage() {
   );
 
   const reset = () => {
-    setQ("");
-    setCategory("All");
-    setMinAmount("");
-    setMaxAmount("");
-    setFrom("");
-    setTo("");
+    setQDraft("");
+    resetFilters();
   };
+
+  const desktopRightControls = (
+    <>
+      <label className="ss-muted" style={{ fontSize: 12 }}>
+        From
+        <input
+          className="ss-input"
+          type="date"
+          value={filters.from}
+          onChange={(e) => setFilters((p) => ({ ...p, from: e.target.value }))}
+          aria-label="Date from"
+        />
+      </label>
+      <label className="ss-muted" style={{ fontSize: 12 }}>
+        To
+        <input
+          className="ss-input"
+          type="date"
+          value={filters.to}
+          onChange={(e) => setFilters((p) => ({ ...p, to: e.target.value }))}
+          aria-label="Date to"
+        />
+      </label>
+      <label className="ss-muted" style={{ fontSize: 12 }}>
+        Min
+        <input
+          className="ss-input"
+          inputMode="decimal"
+          value={filters.min}
+          onChange={(e) => setFilters((p) => ({ ...p, min: clampAmountString(e.target.value) }))}
+          placeholder="0"
+          aria-label="Minimum amount"
+        />
+      </label>
+      <label className="ss-muted" style={{ fontSize: 12 }}>
+        Max
+        <input
+          className="ss-input"
+          inputMode="decimal"
+          value={filters.max}
+          onChange={(e) => setFilters((p) => ({ ...p, max: clampAmountString(e.target.value) }))}
+          placeholder="999"
+          aria-label="Maximum amount"
+        />
+      </label>
+    </>
+  );
 
   return (
     <main role="main" aria-label="Transactions">
       <PageHeader
         title="Transactions"
         description="Search, filter, and review your transactions. (Mock dataset; API wiring later.)"
-        right={
-          <Button variant="ghost" onClick={reset} aria-label="Reset filters">
-            Reset
-          </Button>
+        right={<Chip tone="secondary">URL-synced filters</Chip>}
+      />
+
+      <FilterBar
+        title="Transaction filters"
+        onReset={reset}
+        left={
+          <>
+            <div style={{ position: "relative", minWidth: 260, flex: "1 1 320px" }}>
+              <span style={{ position: "absolute", left: 12, top: 11, color: "rgba(255,255,255,0.55)" }}>
+                <IconSearch />
+              </span>
+              <input
+                className="ss-input"
+                style={{ paddingLeft: 40, minWidth: 280 }}
+                value={qDraft}
+                onChange={(e) => setQDraft(e.target.value)}
+                placeholder="Search merchant, category, status…"
+                aria-label="Search transactions"
+              />
+            </div>
+
+            <select
+              className="ss-select"
+              value={filters.category}
+              onChange={(e) => setFilters((p) => ({ ...p, category: e.target.value }))}
+              aria-label="Filter by category"
+              style={{ minWidth: 180 }}
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+        right={desktopRightControls}
+        mobileDrawerContent={
+          <>
+            {desktopRightControls}
+            <div className="ss-muted" style={{ fontSize: 12 }}>
+              Tip: Filters persist in the URL so you can share your view.
+            </div>
+          </>
         }
       />
 
-      <div className="ss-card">
-        <div className="ss-card-pad">
-          <div className="ss-toolbar" aria-label="Transaction filters">
-            <div className="ss-toolbar-left" style={{ flex: "1 1 340px" }}>
-              <div style={{ position: "relative", minWidth: 260, flex: "1 1 320px" }}>
-                <span style={{ position: "absolute", left: 12, top: 11, color: "rgba(55,65,81,0.55)" }}>
-                  <IconSearch />
-                </span>
-                <input
-                  className="ss-input"
-                  style={{ paddingLeft: 40 }}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search merchant, category, status…"
-                  aria-label="Search transactions"
-                />
-              </div>
+      <div style={{ height: 12 }} />
 
-              <select className="ss-select" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Filter by category">
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="ss-toolbar-right" style={{ flex: "1 1 420px", justifyContent: "flex-end" }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <label className="ss-muted" style={{ fontSize: 12 }}>
-                  From
-                  <input className="ss-input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Date from" />
-                </label>
-                <label className="ss-muted" style={{ fontSize: 12 }}>
-                  To
-                  <input className="ss-input" type="date" value={to} onChange={(e) => setTo(e.target.value)} aria-label="Date to" />
-                </label>
-                <label className="ss-muted" style={{ fontSize: 12 }}>
-                  Min
-                  <input
-                    className="ss-input"
-                    inputMode="decimal"
-                    value={minAmount}
-                    onChange={(e) => setMinAmount(e.target.value)}
-                    placeholder="0"
-                    aria-label="Minimum amount"
-                  />
-                </label>
-                <label className="ss-muted" style={{ fontSize: 12 }}>
-                  Max
-                  <input
-                    className="ss-input"
-                    inputMode="decimal"
-                    value={maxAmount}
-                    onChange={(e) => setMaxAmount(e.target.value)}
-                    placeholder="999"
-                    aria-label="Maximum amount"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-
+      <div className="ss-card" aria-label="Transactions results summary">
+        <div className="ss-card-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <p className="ss-card-caption" style={{ margin: 0 }}>
-            Showing <strong>{rows.length}</strong> results.
+            {isLoading ? (
+              "Loading transactions…"
+            ) : (
+              <>
+                Showing <strong>{rows.length}</strong> results.
+              </>
+            )}
           </p>
+          <Button variant="ghost" onClick={() => {}} aria-label="Import transactions (stub)">
+            Import transactions
+          </Button>
         </div>
       </div>
 
@@ -170,7 +232,15 @@ export default function TransactionsPage() {
         columns={columns}
         rows={rows.sort((a, b) => (a.date < b.date ? 1 : -1))}
         pageSize={10}
-        emptyMessage="No transactions match these filters."
+        isLoading={isLoading}
+        emptySlot={
+          <EmptyState
+            title="No transactions match your filters"
+            description="Try adjusting the date range, category, or amount filters. You can also import a dataset to get started."
+            primaryAction={{ label: "Import transactions", onClick: () => {}, variant: "primary" }}
+            secondaryAction={{ label: "Reset filters", onClick: reset, variant: "ghost" }}
+          />
+        }
       />
     </main>
   );
