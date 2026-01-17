@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Button, Chip } from "./ui";
 import { useAuth } from "../auth/AuthProvider";
+import Logo from "./Logo";
 
 function titleForPath(pathname) {
   if (pathname === "/") return "Dashboard";
@@ -51,6 +52,16 @@ export default function Navbar({ onToggleSidebar }) {
             <span />
           </span>
         </button>
+
+        <Logo
+          size="sm"
+          alt="SpendSense"
+          style={{
+            borderRadius: 14,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(148,163,184,0.18)",
+          }}
+        />
 
         <div style={{ minWidth: 0 }}>
           <div className="ss-topbar-title">{title}</div>

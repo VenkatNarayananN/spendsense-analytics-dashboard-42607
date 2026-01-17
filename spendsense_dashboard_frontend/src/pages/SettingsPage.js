@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button, Card, Chip, PageHeader } from "../components/ui";
 import { useAuth } from "../auth/AuthProvider";
 import { usePreferences } from "../state/preferences";
+import Logo from "../components/Logo";
 
 function isValidCurrency(code) {
   return ["USD", "EUR", "GBP", "CAD", "AUD"].includes(code);
@@ -71,7 +72,12 @@ export default function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Manage your profile and preferences. Demo mode only changes analytics pages."
-        right={<Chip tone="primary">SpendSense</Chip>}
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Logo size="sm" alt="SpendSense logo" />
+            <Chip tone="primary">SpendSense</Chip>
+          </div>
+        }
       />
 
       <div className="ss-grid ss-grid-2" aria-label="settings grid">

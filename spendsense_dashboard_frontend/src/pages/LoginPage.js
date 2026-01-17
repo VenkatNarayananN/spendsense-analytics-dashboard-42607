@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button, Card, Chip } from "../components/ui";
 import { useAuth } from "../auth/AuthProvider";
 import { isSupabaseConfiguredFn } from "../lib/supabaseClient";
+import Logo from "../components/Logo";
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
@@ -88,9 +89,12 @@ export default function LoginPage() {
     >
       <div style={{ width: "min(980px, 100%)", display: "grid", gap: 18, gridTemplateColumns: "1fr" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <div>
-            <h1 className="ss-section-title" style={{ marginBottom: 6 }}>Sign in</h1>
-            <p className="ss-section-desc">Authenticate with Supabase to access your dashboard</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Logo size="lg" alt="SpendSense logo" />
+            <div>
+              <h1 className="ss-section-title" style={{ marginBottom: 6 }}>Sign in</h1>
+              <p className="ss-section-desc">Authenticate with Supabase to access your dashboard</p>
+            </div>
           </div>
           <Chip tone="secondary" title="Authentication provider">
             Supabase Auth
