@@ -16,7 +16,6 @@ export default function LoginPage() {
   const nav = useNavigate();
   const loc = useLocation();
 
-  const supabaseConfigured = isSupabaseConfiguredFn();
   const supabaseDiag = useMemo(() => getSupabaseDiagnostics(), []);
 
   // Small runtime diagnostic for debugging env wiring issues (safe: no full key exposure).
@@ -62,11 +61,13 @@ export default function LoginPage() {
   };
 
   const canSubmit = useMemo(() => {
-    if (!supabaseConfigured) return false;
+    // UI enablement is driven by form validity + async state only.
+    // If Supabase is misconfigured, the AuthProvider will return a clear error on submit,
+    // and diagnostics on this page will explain what's missing.
     if (!email.trim() || !password) return false;
     if (!isValidEmail(email)) return false;
     return true;
-  }, [supabaseConfigured, email, password]);
+  }, [email, password]);
 
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
@@ -152,9 +153,10 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {!supabaseConfigured ? (
+            {!supabaseDiag.configured ? (
               <div className="ss-card-caption" style={{ color: "var(--ss-error)" }}>
-                Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY (or fallbacks) to enable sign-in.
+                Supabase is not configured. Set REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_KEY (or fallbacks). You can still
+                interact with the form; submission will fail until env is set.
               </div>
             ) : null}
 
