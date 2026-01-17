@@ -13,6 +13,9 @@
   --ss-warn: #f59e0b;
   --ss-error: #ef4444;
 
+  /* Compatibility tokens (some components/pages may use older names) */
+  --ss-danger: var(--ss-error);
+
   /* Neutrals / surfaces (cool grays) */
   --ss-bg: #0b1220; /* app background */
   --ss-surface-900: #0f172a;
