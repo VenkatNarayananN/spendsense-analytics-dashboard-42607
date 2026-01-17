@@ -20,17 +20,14 @@ export default function SidebarNav() {
           key={to}
           to={to}
           end={to === "/"}
-          className={({ isActive }) => `ss-nav-item`}
+          className={({ isActive }) => `ss-nav-item ${isActive ? "is-active" : ""}`}
           aria-label={label}
+          aria-current={({ isActive }) => (isActive ? "page" : undefined)}
         >
-          {({ isActive }) => (
-            <span className="ss-nav-item" aria-current={isActive ? "page" : undefined}>
-              <span className="ss-nav-icon">
-                <Icon />
-              </span>
-              <span className="ss-nav-label">{label}</span>
-            </span>
-          )}
+          <span className="ss-nav-icon" aria-hidden="true">
+            <Icon />
+          </span>
+          <span className="ss-nav-label">{label}</span>
         </NavLink>
       ))}
     </nav>

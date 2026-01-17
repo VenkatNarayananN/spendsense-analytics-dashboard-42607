@@ -274,22 +274,41 @@ a {
   gap: 12px;
   padding: 10px 12px;
   border-radius: var(--ss-radius-md);
-  color: color-mix(in srgb, var(--ss-text-primary) 86%, transparent);
+
+  /* Inactive state: muted text/icon, no background */
+  color: color-mix(in srgb, var(--ss-text-primary) 72%, transparent);
   border: 1px solid transparent;
-  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+  background: transparent;
+
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease,
+    color 140ms ease;
 }
 
 .ss-nav-item:hover {
-  background: color-mix(in srgb, var(--ss-card-bg) 55%, transparent);
-  border-color: color-mix(in srgb, var(--ss-secondary) 30%, transparent);
+  /* Hover state should not look "active"; keep it subtle */
+  background: color-mix(in srgb, var(--ss-card-bg) 45%, transparent);
+  border-color: color-mix(in srgb, var(--ss-secondary) 22%, transparent);
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.25);
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.22);
+  color: color-mix(in srgb, var(--ss-text-primary) 90%, transparent);
 }
 
-.ss-nav-item[aria-current="page"] {
-  background: linear-gradient(135deg, rgba(0, 163, 191, 0.18), rgba(11, 99, 197, 0.12));
-  border-color: color-mix(in srgb, var(--ss-secondary) 34%, transparent);
+/* Single source of truth for active state */
+.ss-nav-item.is-active {
+  /* Theme-aware accent: rose+gold blend using existing tokens (works in light/dark) */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--ss-primary) 22%, transparent),
+    color-mix(in srgb, var(--ss-secondary) 14%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--ss-primary) 28%, transparent);
   color: var(--ss-text-strong);
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.18);
+}
+
+/* Keep keyboard focus visible even when active */
+.ss-nav-item.is-active:focus-visible {
+  box-shadow: var(--ss-focus);
 }
 
 .ss-nav-icon {
@@ -298,7 +317,9 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, var(--ss-text-primary) 90%, transparent);
+
+  /* Inherit currentColor so icon automatically matches active/inactive */
+  color: currentColor;
 }
 
 .ss-nav-label {
