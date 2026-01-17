@@ -1,41 +1,54 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Button, Chip } from "./ui";
 import { useAuth } from "../auth/AuthProvider";
 import Logo from "./Logo";
 
 function titleForPath(pathname) {
-  if (pathname === "/") return "Dashboard";
+  if (pathname === "/dashboard" || pathname === "/") return "Dashboard";
   if (pathname.startsWith("/transactions")) return "Transactions";
   if (pathname.startsWith("/insights")) return "Insights";
   if (pathname.startsWith("/alerts")) return "Alerts";
   if (pathname.startsWith("/settings")) return "Settings";
-  if (pathname.startsWith("/protected")) return "Protected";
+  if (pathname.startsWith("/profile")) return "Profile";
   if (pathname.startsWith("/login")) return "Login";
   return "SpendSense";
 }
 
 const nav = [
-  { to: "/", label: "Dashboard" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/transactions", label: "Transactions" },
   { to: "/insights", label: "Insights" },
   { to: "/alerts", label: "Alerts" },
   { to: "/settings", label: "Settings" },
-  { to: "/protected", label: "Protected" },
 ];
 
 // PUBLIC_INTERFACE
 export default function Navbar({ onToggleSidebar }) {
-  /** Top navigation bar with mobile collapsible menu, theme-consistent styling, and auth stubs. */
+  /** Top navigation bar for authenticated users. */
   const loc = useLocation();
+  const navigate = useNavigate();
   const title = useMemo(() => titleForPath(loc.pathname), [loc.pathname]);
-  const { isAuthenticated, login, logout } = useAuth();
+
+  const { isAuthenticated, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
   }, [loc.pathname]);
+
+  const onSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await logout();
+      // AuthGateRedirector also handles this, but we navigate explicitly for immediate UX.
+      navigate("/login", { replace: true });
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   return (
     <header className="ss-topbar" role="banner" aria-label="Top navigation bar">
@@ -65,7 +78,7 @@ export default function Navbar({ onToggleSidebar }) {
 
         <div style={{ minWidth: 0 }}>
           <div className="ss-topbar-title">{title}</div>
-          <div className="ss-topbar-subtitle">Modern fintech UI • mock data</div>
+          <div className="ss-topbar-subtitle">Modern fintech UI</div>
         </div>
       </div>
 
@@ -75,34 +88,10 @@ export default function Navbar({ onToggleSidebar }) {
         </div>
 
         {isAuthenticated ? (
-          <Button variant="ghost" onClick={() => logout()} aria-label="Logout (placeholder)">
-            Logout
+          <Button variant="ghost" onClick={onSignOut} aria-label="Sign out" disabled={signingOut}>
+            {signingOut ? "Signing out…" : "Sign out"}
           </Button>
-        ) : (
-          <Button variant="ghost" onClick={() => login()} aria-label="Login (placeholder)">
-            Login
-          </Button>
-        )}
-
-        <a
-          href="https://example.com"
-          onClick={(e) => e.preventDefault()}
-          className="ss-topbar-help"
-          style={{
-            fontSize: 12,
-            textDecoration: "none",
-            border: "1px solid rgba(148,163,184,0.22)",
-            borderRadius: 999,
-            padding: "8px 10px",
-            color: "rgba(229,231,235,0.92)",
-            background:
-              "linear-gradient(135deg, rgba(14,77,146,0.22), rgba(0,163,191,0.12))",
-            backdropFilter: "blur(10px)",
-          }}
-          aria-label="Help (not implemented)"
-        >
-          Help
-        </a>
+        ) : null}
 
         <button
           type="button"
@@ -120,17 +109,13 @@ export default function Navbar({ onToggleSidebar }) {
         </button>
       </div>
 
-      <nav
-        id="ss-topbar-menu"
-        className={`ss-topbar-menu ${menuOpen ? "is-open" : ""}`}
-        aria-label="Topbar navigation"
-      >
+      <nav id="ss-topbar-menu" className={`ss-topbar-menu ${menuOpen ? "is-open" : ""}`} aria-label="Topbar navigation">
         <div className="ss-topbar-menu-inner">
           {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
-              end={n.to === "/"}
+              end={n.to === "/dashboard"}
               className={({ isActive }) => `ss-topbar-link ${isActive ? "is-active" : ""}`}
               aria-label={n.label}
             >
@@ -142,4 +127,3 @@ export default function Navbar({ onToggleSidebar }) {
     </header>
   );
 }
-

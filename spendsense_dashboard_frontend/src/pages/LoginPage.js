@@ -34,9 +34,9 @@ export default function LoginPage() {
 
   const from = useMemo(() => {
     const st = loc.state;
-    // ProtectedRoute sets `state.from` to the pathname; after login we redirect there,
-    // otherwise to dashboard root.
-    return st && typeof st === "object" && st.from ? st.from : "/";
+    // ProtectedRoute sets `state.from` to the pathname; after login we redirect there.
+    // If no prior protected destination exists, redirect to /dashboard per requirement.
+    return st && typeof st === "object" && st.from ? st.from : "/dashboard";
   }, [loc.state]);
 
   const validate = () => {
@@ -55,7 +55,7 @@ export default function LoginPage() {
     return true;
   }, [supabaseConfigured, email, password]);
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   const onSubmit = async (e) => {
     e.preventDefault();

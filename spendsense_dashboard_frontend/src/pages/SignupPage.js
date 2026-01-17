@@ -79,7 +79,7 @@ export default function SignupPage() {
       // If email confirmation is enabled, session may be null until verified.
       // Still redirect to dashboard per requirement; ProtectedRoute will bounce to login if not authenticated.
       if (data?.session) {
-        nav("/", { replace: true });
+        nav("/dashboard", { replace: true });
       } else {
         nav("/login", { replace: true, state: { signup: "check_email" } });
       }
@@ -88,8 +88,8 @@ export default function SignupPage() {
     }
   };
 
-  // If already authenticated, go to dashboard (root acts as dashboard in this app).
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  // If already authenticated, go to dashboard.
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
 
   return (
     <main
