@@ -116,10 +116,11 @@ export default function TopbarProfileDropdown() {
       <button
         id={buttonId}
         type="button"
-        className="ss-prof-btn"
+        className={`ss-prof-btn ${open ? "is-open" : ""}`}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
+        aria-label="Account menu"
         onClick={() => setOpen((v) => !v)}
       >
         <span className="ss-prof-avatar" aria-label={profile?.avatarUrl ? "User avatar" : "User initials"}>

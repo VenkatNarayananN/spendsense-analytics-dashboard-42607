@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Chip } from "./ui";
+import React, { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useTheme } from "../state/theme";
 import Logo from "./Logo";
@@ -34,12 +33,6 @@ export default function Navbar({ onToggleSidebar }) {
 
   const { isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // Close menu on route change
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [loc.pathname]);
 
   return (
     <header className="ss-topbar" role="banner" aria-label="Top navigation bar">
