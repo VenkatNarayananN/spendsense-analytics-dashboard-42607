@@ -76,14 +76,17 @@ export default function Navbar({ onToggleSidebar }) {
         <a
           href="https://example.com"
           onClick={(e) => e.preventDefault()}
-          className="ss-muted ss-topbar-help"
+          className="ss-topbar-help"
           style={{
             fontSize: 12,
             textDecoration: "none",
-            border: "1px solid var(--ss-border)",
+            border: "1px solid rgba(148,163,184,0.22)",
             borderRadius: 999,
             padding: "8px 10px",
-            background: "rgba(255,255,255,0.70)",
+            color: "rgba(229,231,235,0.92)",
+            background:
+              "linear-gradient(135deg, rgba(14,77,146,0.22), rgba(0,163,191,0.12))",
+            backdropFilter: "blur(10px)",
           }}
           aria-label="Help (not implemented)"
         >

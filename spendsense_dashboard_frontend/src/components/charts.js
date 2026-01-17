@@ -88,20 +88,36 @@ export function AreaLineChart({ title, data, height = 180, isLoading = false, em
         style={{ display: "block" }}
       >
         <defs>
-          <linearGradient id="ssAreaFin" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.30" />
-            <stop offset="100%" stopColor="#6366F1" stopOpacity="0.06" />
+          {/* Ocean theme: consume CSS variables (fallbacks included) */}
+          <linearGradient id="ssAreaOcean" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--ss-secondary, #00A3BF)" stopOpacity="0.30" />
+            <stop offset="100%" stopColor="var(--ss-primary, #0B63C5)" stopOpacity="0.06" />
           </linearGradient>
         </defs>
 
-        <path d={area} fill="url(#ssAreaFin)" />
-        <path d={path} fill="none" stroke="#22D3EE" strokeWidth="3" />
+        {/* subtle gridlines */}
+        <g opacity="1">
+          {[0.2, 0.4, 0.6, 0.8].map((t) => (
+            <line
+              key={t}
+              x1="0"
+              x2="600"
+              y1={(height * t).toFixed(2)}
+              y2={(height * t).toFixed(2)}
+              stroke="var(--ss-chart-grid, rgba(148,163,184,0.18))"
+              strokeWidth="1"
+            />
+          ))}
+        </g>
+
+        <path d={area} fill="url(#ssAreaOcean)" />
+        <path d={path} fill="none" stroke="var(--ss-chart-line, #00A3BF)" strokeWidth="3" />
 
         {/* top/bottom labels */}
-        <text x="6" y="16" fontSize="12" fill="rgba(255,255,255,0.70)">
+        <text x="6" y="16" fontSize="12" fill="var(--ss-chart-label, rgba(229,231,235,0.78))">
           {fmtCurrency(max)}
         </text>
-        <text x="6" y={height - 8} fontSize="12" fill="rgba(255,255,255,0.70)">
+        <text x="6" y={height - 8} fontSize="12" fill="var(--ss-chart-label, rgba(229,231,235,0.78))">
           {fmtCurrency(min)}
         </text>
       </svg>
@@ -138,6 +154,16 @@ export function BarChart({ title, data, height = 180, isLoading = false, emptyMe
   return (
     <figure aria-label={title} style={{ margin: 0 }}>
       <svg viewBox={`0 0 600 ${height}`} width="100%" height={height} role="img" aria-label={title}>
+        {/* subtle baseline */}
+        <line
+          x1="0"
+          x2="600"
+          y1={height - 18}
+          y2={height - 18}
+          stroke="var(--ss-chart-grid, rgba(148,163,184,0.18))"
+          strokeWidth="1"
+        />
+
         {data.map((d, i) => {
           const w = 600 / (data.length || 1);
           const x = i * w + 10;
@@ -147,9 +173,23 @@ export function BarChart({ title, data, height = 180, isLoading = false, emptyMe
 
           return (
             <g key={d.label}>
-              <rect x={x} y={y} width={bw} height={h} rx="10" fill="rgba(99,102,241,0.26)" />
-              <rect x={x} y={y} width={bw} height={Math.max(2, h * 0.6)} rx="10" fill="rgba(34,211,238,0.26)" />
-              <text x={x + bw / 2} y={height - 6} textAnchor="middle" fontSize="11" fill="rgba(255,255,255,0.70)">
+              <rect
+                x={x}
+                y={y}
+                width={bw}
+                height={h}
+                rx="10"
+                fill="rgba(11,99,197,0.18)"
+                stroke="rgba(148,163,184,0.16)"
+              />
+              <rect x={x} y={y} width={bw} height={Math.max(2, h * 0.6)} rx="10" fill="rgba(0,163,191,0.22)" />
+              <text
+                x={x + bw / 2}
+                y={height - 6}
+                textAnchor="middle"
+                fontSize="11"
+                fill="var(--ss-chart-label, rgba(229,231,235,0.78))"
+              >
                 {d.label}
               </text>
             </g>
