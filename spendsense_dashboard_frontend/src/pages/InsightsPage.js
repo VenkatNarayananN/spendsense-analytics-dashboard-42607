@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, Chip, PageHeader } from "../components/ui";
+import { Card, Chip, LiveBadge, PageHeader } from "../components/ui";
 import { AreaLineChart, BarChart } from "../components/charts";
 import { EmptyState, FilterBar } from "../components/ux";
 import { parsers, useURLQueryState } from "../components/urlState";
@@ -38,7 +38,7 @@ export default function InsightsPage() {
     segment: { default: "All", parse: parsers.string, serialize: (v) => String(v || "All") },
   });
 
-  const { transactions: ctxTransactions, loadingData, dataError, seedingState, refreshAll } = useAppData();
+  const { transactions: ctxTransactions, loadingData, dataError, seedingState, realtimeStatus, refreshAll } = useAppData();
 
   // Keep warmup skeleton, also respect shared loading.
   const [pageWarmup, setPageWarmup] = useState(true);
@@ -89,7 +89,11 @@ export default function InsightsPage() {
       <PageHeader
         title="Insights"
         description="Plain-English insights based on your transaction history — what changed, what’s frequent, and where to optimize."
-        right={<Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>}
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.transactions} label="Live" /> : null}
+          </div>
+        }
       />
 
       <FilterBar

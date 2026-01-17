@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Button, Card, Chip, PageHeader } from "../components/ui";
+import { Button, Card, Chip, LiveBadge, PageHeader } from "../components/ui";
 import { useAuth } from "../auth/AuthProvider";
 import { usePreferences } from "../state/preferences";
 import { useAppData } from "../state/appData";
@@ -31,7 +31,7 @@ export default function SettingsPage() {
   /** Settings: editable profile, user preferences, and demo mode toggle (analytics pages only). */
   const { prefs, setPrefs, profile, setProfile } = usePreferences();
   const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const { generateSampleDataAction, seedingState } = useAppData();
+  const { generateSampleDataAction, seedingState, realtimeStatus } = useAppData();
 
   const supabaseConfigured = isSupabaseConfiguredFn();
 
@@ -80,7 +80,8 @@ export default function SettingsPage() {
         title="Settings"
         description="Manage your profile and preferences. Demo mode only changes analytics pages."
         right={
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.transactions} label="Live" /> : null}
             <Logo size="sm" alt="SpendSense logo" />
             <Chip tone="primary">SpendSense</Chip>
           </div>

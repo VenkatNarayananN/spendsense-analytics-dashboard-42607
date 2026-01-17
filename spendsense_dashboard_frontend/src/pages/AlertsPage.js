@@ -139,7 +139,6 @@ export default function AlertsPage() {
 
   const topRight = (
     <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-      <Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>
       {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.alerts} label="Live" /> : null}
       <Button variant="primary" onClick={openNewAlert} disabled={!canOpenNewAlert} aria-label="New Alert">
         New Alert

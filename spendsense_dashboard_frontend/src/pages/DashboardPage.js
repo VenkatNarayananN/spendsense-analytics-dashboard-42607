@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, Chip, PageHeader } from "../components/ui";
+import { Card, Chip, LiveBadge, PageHeader } from "../components/ui";
 import { AreaLineChart, BarChart } from "../components/charts";
 import { EmptyState, FilterBar } from "../components/ux";
 import { usePreferences } from "../state/preferences";
@@ -18,7 +18,7 @@ function fmtCurrency(n, currency = "USD") {
 export default function DashboardPage() {
   /** Dashboard: realistic KPIs, category breakdown, spending trend, and plain-English highlights. */
   const { prefs } = usePreferences();
-  const { transactions: ctxTransactions, alerts: ctxAlerts, loadingData, dataError, seedingState, refreshAll } = useAppData();
+  const { transactions: ctxTransactions, alerts: ctxAlerts, loadingData, dataError, seedingState, realtimeStatus, refreshAll } = useAppData();
 
   // Keep existing page-level skeleton behavior but also respect shared data loading state.
   const [pageWarmup, setPageWarmup] = useState(true);
@@ -45,7 +45,11 @@ export default function DashboardPage() {
       <PageHeader
         title="Dashboard"
         description="A quick overview of this month’s spending, budget health, and category mix."
-        right={<Chip tone={prefs.demoMode ? "secondary" : "primary"}>{prefs.demoMode ? "Demo mode" : "Live"}</Chip>}
+        right={
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            {!prefs.demoMode ? <LiveBadge status={realtimeStatus?.transactions} label="Live" /> : null}
+          </div>
+        }
       />
 
       <FilterBar
