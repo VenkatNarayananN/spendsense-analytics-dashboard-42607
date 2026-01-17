@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Button, Card, Chip, PageHeader } from "../components/ui";
 import { EmptyState, FilterBar } from "../components/ux";
 import { usePreferences } from "../state/preferences";
-import { deriveAlerts, generateDemoTransactions } from "../mock/demoData";
+import { useAppData } from "../state/appData";
 
 const severityTone = {
   info: "primary",
@@ -15,23 +15,12 @@ const severityTone = {
 export default function AlertsPage() {
   /** Alerts management: list, filters, and dismiss actions (demo-derived). This is the only page that manages alerts. */
   const { prefs } = usePreferences();
+  const { alerts: ctxAlerts, loadingData, dataError, seedingState, refreshAlerts } = useAppData();
 
-  // Simulated loading (bounded)
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setIsLoading(false), 420);
-    return () => window.clearTimeout(t);
-  }, []);
+  const isLoading = Boolean(loadingData);
 
-  const transactions = useMemo(() => {
-    const demo = generateDemoTransactions({ seed: 42, count: 54, currency: prefs.currency });
-    return prefs.demoMode ? demo : demo; // placeholder: when real data exists, use it here if demoMode=false
-  }, [prefs.demoMode, prefs.currency]);
-
-  const derived = useMemo(
-    () => deriveAlerts(transactions, { monthlyBudget: prefs.monthlyBudget, alertsEnabled: prefs.alertsEnabled }),
-    [transactions, prefs.monthlyBudget, prefs.alertsEnabled]
-  );
+  // Context already applies safe fallback (derived from demo transactions) when needed.
+  const derived = useMemo(() => (Array.isArray(ctxAlerts) ? ctxAlerts : []), [ctxAlerts]);
 
   const [dismissed, setDismissed] = useState(() => new Set());
   const [severity, setSeverity] = useState("All");
@@ -109,6 +98,21 @@ export default function AlertsPage() {
       />
 
       <div style={{ height: 12 }} />
+
+      {seedingState?.status === "failed" || dataError ? (
+        <div className="ss-card" role="status" aria-label="Data status message">
+          <div className="ss-card-pad">
+            <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              {seedingState?.status === "failed" ? seedingState.message : dataError}
+              <div style={{ height: 8 }} />
+              <Button variant="ghost" onClick={() => refreshAlerts()} aria-label="Retry loading alerts">
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="ss-grid ss-grid-2" aria-label="alerts layout">
         <Card title="Alerts" caption="Dismiss items after reviewing">

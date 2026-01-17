@@ -3,14 +3,8 @@ import { Card, Chip, PageHeader } from "../components/ui";
 import { AreaLineChart, BarChart } from "../components/charts";
 import { EmptyState, FilterBar } from "../components/ux";
 import { usePreferences } from "../state/preferences";
-import {
-  categoryHighlight,
-  deriveAlerts,
-  deriveDashboardMetrics,
-  generateDemoTransactions,
-  merchantHighlight,
-  monthSpendComparison,
-} from "../mock/demoData";
+import { useAppData } from "../state/appData";
+import { categoryHighlight, deriveDashboardMetrics, merchantHighlight, monthSpendComparison } from "../mock/demoData";
 
 function fmtCurrency(n, currency = "USD") {
   try {
@@ -24,33 +18,21 @@ function fmtCurrency(n, currency = "USD") {
 export default function DashboardPage() {
   /** Dashboard: realistic KPIs, category breakdown, spending trend, and plain-English highlights. */
   const { prefs } = usePreferences();
+  const { transactions: ctxTransactions, alerts: ctxAlerts, loadingData, dataError, seedingState, refreshAll } = useAppData();
 
-  // Simulated loading (bounded; no infinite loaders)
-  const [isLoading, setIsLoading] = useState(true);
+  // Keep existing page-level skeleton behavior but also respect shared data loading state.
+  const [pageWarmup, setPageWarmup] = useState(true);
   useEffect(() => {
-    const t = window.setTimeout(() => setIsLoading(false), 420);
+    const t = window.setTimeout(() => setPageWarmup(false), 420);
     return () => window.clearTimeout(t);
   }, []);
+  const isLoading = Boolean(pageWarmup || loadingData);
 
-  /**
-   * Data source strategy:
-   * - Until backend is wired, "real data" is unavailable, so we fall back to demo.
-   * - Demo mode toggle must affect ONLY analytics pages; this page is analytics => obey demoMode.
-   */
-  const transactions = useMemo(() => {
-    const demo = generateDemoTransactions({ seed: 42, count: 52, currency: prefs.currency });
-    return prefs.demoMode ? demo : demo; // placeholder: when real data exists, use it here if demoMode=false
-  }, [prefs.demoMode, prefs.currency]);
+  const transactions = useMemo(() => (Array.isArray(ctxTransactions) ? ctxTransactions : []), [ctxTransactions]);
 
-  const metrics = useMemo(
-    () => deriveDashboardMetrics(transactions, { monthlyBudget: prefs.monthlyBudget }),
-    [transactions, prefs.monthlyBudget]
-  );
+  const metrics = useMemo(() => deriveDashboardMetrics(transactions, { monthlyBudget: prefs.monthlyBudget }), [transactions, prefs.monthlyBudget]);
 
-  const alerts = useMemo(
-    () => deriveAlerts(transactions, { monthlyBudget: prefs.monthlyBudget, alertsEnabled: prefs.alertsEnabled }),
-    [transactions, prefs.monthlyBudget, prefs.alertsEnabled]
-  );
+  const alerts = useMemo(() => (Array.isArray(ctxAlerts) ? ctxAlerts : []), [ctxAlerts]);
 
   const highlight1 = useMemo(() => monthSpendComparison(transactions), [transactions]);
   const highlight2 = useMemo(() => categoryHighlight(transactions), [transactions]);
@@ -79,6 +61,23 @@ export default function DashboardPage() {
       />
 
       <div style={{ height: 12 }} />
+
+      {!isLoading && (seedingState?.status === "failed" || dataError) ? (
+        <div className="ss-card" role="status" aria-label="Data status message">
+          <div className="ss-card-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              {seedingState?.status === "failed" ? seedingState.message : dataError}
+            </div>
+            <Chip tone="secondary" style={{ whiteSpace: "nowrap" }}>
+              You can keep browsing
+            </Chip>
+            <button type="button" className="ss-btn ss-btn-ghost" onClick={() => refreshAll()} aria-label="Retry loading data">
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {!isLoading && !hasAnyData ? (
         <EmptyState

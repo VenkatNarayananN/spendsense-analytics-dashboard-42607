@@ -16,6 +16,7 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import { PreferencesProvider } from "./state/preferences";
+import { AppDataProvider } from "./state/appData";
 
 function titleForPath(pathname) {
   if (pathname === "/" || pathname === "/dashboard") return "Dashboard";
@@ -217,7 +218,9 @@ export default function App() {
   return (
     <AuthProvider>
       <PreferencesProvider>
-        <AppShell />
+        <AppDataProvider>
+          <AppShell />
+        </AppDataProvider>
       </PreferencesProvider>
     </AuthProvider>
   );

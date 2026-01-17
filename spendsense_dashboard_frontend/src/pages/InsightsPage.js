@@ -4,7 +4,8 @@ import { AreaLineChart, BarChart } from "../components/charts";
 import { EmptyState, FilterBar } from "../components/ux";
 import { parsers, useURLQueryState } from "../components/urlState";
 import { usePreferences } from "../state/preferences";
-import { deriveInsights, deriveDashboardMetrics, generateDemoTransactions } from "../mock/demoData";
+import { useAppData } from "../state/appData";
+import { deriveInsights, deriveDashboardMetrics } from "../mock/demoData";
 
 const toneLabel = {
   primary: "Info",
@@ -37,17 +38,17 @@ export default function InsightsPage() {
     segment: { default: "All", parse: parsers.string, serialize: (v) => String(v || "All") },
   });
 
-  // Simulated loading (bounded; no infinite loaders)
-  const [isLoading, setIsLoading] = useState(true);
+  const { transactions: ctxTransactions, loadingData, dataError, seedingState, refreshAll } = useAppData();
+
+  // Keep warmup skeleton, also respect shared loading.
+  const [pageWarmup, setPageWarmup] = useState(true);
   useEffect(() => {
-    const t = window.setTimeout(() => setIsLoading(false), 420);
+    const t = window.setTimeout(() => setPageWarmup(false), 420);
     return () => window.clearTimeout(t);
   }, []);
+  const isLoading = Boolean(pageWarmup || loadingData);
 
-  const transactions = useMemo(() => {
-    const demo = generateDemoTransactions({ seed: 42, count: 54, currency: prefs.currency });
-    return prefs.demoMode ? demo : demo; // placeholder: when real data exists, use it here if demoMode=false
-  }, [prefs.demoMode, prefs.currency]);
+  const transactions = useMemo(() => (Array.isArray(ctxTransactions) ? ctxTransactions : []), [ctxTransactions]);
 
   const segments = useMemo(() => ["All", ...Array.from(new Set(transactions.map((t) => t.category)))], [transactions]);
 
@@ -138,6 +139,20 @@ export default function InsightsPage() {
       />
 
       <div style={{ height: 12 }} />
+
+      {!isLoading && (seedingState?.status === "failed" || dataError) ? (
+        <div className="ss-card" role="status" aria-label="Data status message">
+          <div className="ss-card-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              {seedingState?.status === "failed" ? seedingState.message : dataError}
+            </div>
+            <button type="button" className="ss-btn ss-btn-ghost" onClick={() => refreshAll()} aria-label="Retry loading data">
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="ss-grid ss-grid-3" aria-label="insights loading">

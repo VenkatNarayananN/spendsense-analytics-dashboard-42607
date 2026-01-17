@@ -5,7 +5,7 @@ import { IconSearch } from "../components/icons";
 import { EmptyState, FilterBar } from "../components/ux";
 import { parsers, useDebouncedValue, useURLQueryState } from "../components/urlState";
 import { usePreferences } from "../state/preferences";
-import { generateDemoTransactions } from "../mock/demoData";
+import { useAppData } from "../state/appData";
 
 function fmtCurrency(n, currency = "USD") {
   try {
@@ -24,6 +24,7 @@ function clampAmountString(v) {
 export default function TransactionsPage() {
   /** Searchable + filterable transactions table with realistic demo data and URL-synced filters. */
   const { prefs } = usePreferences();
+  const { transactions: ctxTransactions, loadingData, dataError, seedingState, refreshTransactions } = useAppData();
 
   // URL-synced filters
   const [filters, setFilters, resetFilters] = useURLQueryState({
@@ -46,17 +47,13 @@ export default function TransactionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qDebounced]);
 
-  // Simulated loading to demonstrate skeleton UX while staying mock-data-based (bounded).
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const t = window.setTimeout(() => setIsLoading(false), 450);
-    return () => window.clearTimeout(t);
-  }, []);
+  // Loading: rely on shared context (seed + fetch). Keep bounded by context behavior.
+  const isLoading = Boolean(loadingData);
 
   const all = useMemo(() => {
-    const demo = generateDemoTransactions({ seed: 42, count: 54, currency: prefs.currency });
-    return prefs.demoMode ? demo : demo; // placeholder: when real data exists, use it here if demoMode=false
-  }, [prefs.demoMode, prefs.currency]);
+    // Context already provides a safe fallback when Supabase is unavailable or empty.
+    return Array.isArray(ctxTransactions) ? ctxTransactions : [];
+  }, [ctxTransactions]);
 
   const categories = useMemo(() => ["All", ...Array.from(new Set(all.map((t) => t.category)))], [all]);
 
@@ -204,6 +201,21 @@ export default function TransactionsPage() {
       />
 
       <div style={{ height: 12 }} />
+
+      {seedingState?.status === "failed" || dataError ? (
+        <div className="ss-card" role="status" aria-label="Data status message">
+          <div className="ss-card-pad">
+            <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+              <strong style={{ color: "rgba(255,255,255,0.9)" }}>Notice:</strong>{" "}
+              {seedingState?.status === "failed" ? seedingState.message : dataError}
+              <div style={{ height: 8 }} />
+              <Button variant="ghost" onClick={() => refreshTransactions()} aria-label="Retry loading transactions">
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="ss-card" aria-label="Transactions results summary">
         <div className="ss-card-pad" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
