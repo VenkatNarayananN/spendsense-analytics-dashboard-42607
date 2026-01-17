@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Button, Chip } from "./ui";
+import { Chip } from "./ui";
 import { useAuth } from "../auth/AuthProvider";
 import Logo from "./Logo";
+import TopbarProfileDropdown from "./TopbarProfileDropdown";
 
 function titleForPath(pathname) {
   if (pathname === "/dashboard" || pathname === "/") return "Dashboard";
@@ -30,25 +31,13 @@ export default function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate();
   const title = useMemo(() => titleForPath(loc.pathname), [loc.pathname]);
 
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
 
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
   }, [loc.pathname]);
-
-  const onSignOut = async () => {
-    setSigningOut(true);
-    try {
-      await logout();
-      // AuthGateRedirector also handles this, but we navigate explicitly for immediate UX.
-      navigate("/login", { replace: true });
-    } finally {
-      setSigningOut(false);
-    }
-  };
 
   return (
     <header className="ss-topbar" role="banner" aria-label="Top navigation bar">
@@ -87,11 +76,8 @@ export default function Navbar({ onToggleSidebar }) {
           {isAuthenticated ? <Chip tone="success">Signed in</Chip> : <Chip tone="secondary">Guest</Chip>}
         </div>
 
-        {isAuthenticated ? (
-          <Button variant="ghost" onClick={onSignOut} aria-label="Sign out" disabled={signingOut}>
-            {signingOut ? "Signing out…" : "Sign out"}
-          </Button>
-        ) : null}
+        {/* Profile control (avatar/initials + name/email) with dropdown actions */}
+        <TopbarProfileDropdown />
 
         <button
           type="button"
