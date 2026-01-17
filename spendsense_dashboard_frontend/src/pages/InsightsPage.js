@@ -135,14 +135,9 @@ export default function InsightsPage() {
           </>
         }
         right={<div className="ss-muted" style={{ fontSize: 12 }}>{timeframeLabel(filters.tf)}</div>}
-        mobileDrawerContent={
-          <div className="ss-muted" style={{ fontSize: 12 }}>
-            Tip: These filters persist in the URL so you can share a specific insights view.
-          </div>
-        }
       />
 
-      <div style={{ height: 12 }} />
+      <div style={{ height: 8 }} />
 
       {!isLoading && (seedingState?.status === "failed" || dataError) ? (
         <div className="ss-card" role="status" aria-label="Data status message">

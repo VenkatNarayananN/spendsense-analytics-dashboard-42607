@@ -5,10 +5,7 @@ import { usePreferences } from "../state/preferences";
 import { useAppData } from "../state/appData";
 import { isSupabaseConfiguredFn } from "../lib/supabaseClient";
 import Logo from "../components/Logo";
-
-function isValidCurrency(code) {
-  return ["USD", "EUR", "GBP", "CAD", "AUD"].includes(code);
-}
+import { getCurrencies, normalizeCurrency } from "../constants/currencies";
 
 function clampBudget(n) {
   const v = Number(n);
@@ -55,7 +52,7 @@ export default function SettingsPage() {
     }));
   }, [authLoading, setProfile, user]);
 
-  const currencyOptions = useMemo(() => ["USD", "EUR", "GBP", "CAD", "AUD"], []);
+  const currencyOptions = useMemo(() => getCurrencies(), []);
 
   const saveProfile = async () => {
     setSaving(true);
@@ -165,16 +162,17 @@ export default function SettingsPage() {
               Default currency
               <select
                 className="ss-select"
-                value={prefs.currency}
+                value={normalizeCurrency(prefs.currency, "USD")}
                 onChange={(e) => {
-                  const v = e.target.value;
-                  setPrefs((p) => ({ ...p, currency: isValidCurrency(v) ? v : "USD" }));
+                  // Save ISO code only
+                  const v = normalizeCurrency(e.target.value, "USD");
+                  setPrefs((p) => ({ ...p, currency: v }));
                 }}
                 aria-label="Select currency"
               >
                 {currencyOptions.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                  <option key={c.code} value={c.code}>
+                    {c.label}
                   </option>
                 ))}
               </select>
@@ -229,8 +227,8 @@ export default function SettingsPage() {
         >
           <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
             <p style={{ marginTop: 0 }}>
-              This adds a bounded set of sample transactions and alerts to <code>public.transactions</code> and <code>public.alerts</code> for your user.
-              It does not delete existing data.
+              This adds a bounded set of sample transactions and alerts to <code>public.transactions</code> and <code>public.alerts</code> for your
+              user. It does not delete existing data.
             </p>
           </div>
 
@@ -293,4 +291,3 @@ export default function SettingsPage() {
     </main>
   );
 }
-

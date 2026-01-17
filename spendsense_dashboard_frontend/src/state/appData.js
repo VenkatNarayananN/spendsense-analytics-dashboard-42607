@@ -4,6 +4,7 @@ import { seedDemoDataIfEmpty, fetchAlertsForUi, fetchTransactionsForUi, generate
 import { useAuth } from "../auth/AuthProvider";
 import { generateDemoTransactions, deriveAlerts as deriveAlertsFromTransactions } from "../mock/demoData";
 import { usePreferences } from "./preferences";
+import { normalizeCurrency } from "../constants/currencies";
 import {
   subscribeToAlertsRealtime,
   subscribeToTransactionsRealtime,
@@ -60,7 +61,7 @@ export function AppDataProvider({ children }) {
     async ({ attemptSeed = true } = {}) => {
       if (!supabaseConfigured || !isAuthenticated || !userId) {
         // In demo mode or unauthenticated, fall back to local demo generator so UI is never blank.
-        const demoTx = generateDemoTransactions({ seed: 42, count: 54, currency: prefs.currency });
+        const demoTx = generateDemoTransactions({ seed: 42, count: 54, currency: normalizeCurrency(prefs.currency, "USD") });
         setTransactions(demoTx);
         setAlerts(deriveAlertsFromTransactions(demoTx, { monthlyBudget: prefs.monthlyBudget, alertsEnabled: prefs.alertsEnabled }));
         setLoadingData(false);
@@ -226,7 +227,7 @@ export function AppDataProvider({ children }) {
 
       setSeedingState({ status: "running", message: "Generating sample data…" });
 
-      const res = await generateSampleData(userId, { currency: prefs.currency, ...options });
+      const res = await generateSampleData(userId, { currency: normalizeCurrency(prefs.currency, "USD"), ...options });
 
       if (!res.ok) {
         warnNonFatal("Generate sample data failed (non-fatal):", res.error);

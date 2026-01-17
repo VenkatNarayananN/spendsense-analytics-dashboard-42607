@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { normalizeCurrency } from "../constants/currencies";
 
 /**
  * App preferences + profile state.
@@ -33,17 +34,29 @@ function writeStorage(key, value) {
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
+function normalizePrefs(raw) {
+  const p = raw && typeof raw === "object" ? raw : {};
+  return {
+    demoMode: Boolean(p.demoMode),
+    // Always keep currency as an ISO code.
+    currency: normalizeCurrency(p.currency, "USD"),
+    monthlyBudget: Number.isFinite(Number(p.monthlyBudget)) ? Number(p.monthlyBudget) : 2200,
+    alertsEnabled: typeof p.alertsEnabled === "boolean" ? p.alertsEnabled : true,
+  };
+}
+
 // PUBLIC_INTERFACE
 export function PreferencesProvider({ children }) {
   /** Provides preferences (demo mode, currency, budget, alert toggles) and a profile stub. */
-  const [prefs, setPrefs] = useState(() =>
-    readStorage(STORAGE_KEY, {
+  const [prefs, setPrefs] = useState(() => {
+    const stored = readStorage(STORAGE_KEY, {
       demoMode: true,
       currency: "USD",
       monthlyBudget: 2200,
       alertsEnabled: true,
-    })
-  );
+    });
+    return normalizePrefs(stored);
+  });
 
   const [profile, setProfile] = useState(() =>
     readStorage(PROFILE_KEY, {
@@ -55,6 +68,12 @@ export function PreferencesProvider({ children }) {
       avatarUrl: "",
     })
   );
+
+  // If anything external sets prefs to an invalid shape/value, normalize on write.
+  useEffect(() => {
+    setPrefs((p) => normalizePrefs(p));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     writeStorage(STORAGE_KEY, prefs);
@@ -84,4 +103,3 @@ export function usePreferences() {
   if (!ctx) throw new Error("usePreferences must be used within a PreferencesProvider");
   return ctx;
 }
-
