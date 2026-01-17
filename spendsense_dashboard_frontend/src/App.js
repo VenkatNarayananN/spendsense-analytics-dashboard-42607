@@ -4,6 +4,7 @@ import "./App.css";
 
 import SidebarNav from "./components/SidebarNav";
 import Navbar from "./components/Navbar";
+import AppLogo from "./components/AppLogo";
 import DashboardPage from "./pages/DashboardPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import InsightsPage from "./pages/InsightsPage";
@@ -110,10 +111,10 @@ function AppShell() {
 
           <aside className={sidebarClass} aria-label="Sidebar">
             <div className="ss-brand" aria-label="SpendSense brand">
-              <div className="ss-brand-mark" aria-hidden="true" />
+              <AppLogo variant="icon" size="md" />
               <div className="ss-brand-title">
                 <strong>SpendSense</strong>
-                <span>Analytics dashboard</span>
+                <span>Analytics Dashboard</span>
               </div>
             </div>
             <SidebarNav />

@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useTheme } from "../state/theme";
-import Logo from "./Logo";
+import AppLogo from "./AppLogo";
 import TopbarProfileDropdown from "./TopbarProfileDropdown";
 
 function titleForPath(pathname) {
@@ -50,17 +50,17 @@ export default function Navbar({ onToggleSidebar }) {
           </span>
         </button>
 
-        <Logo
+        <AppLogo
+          variant="icon"
           size="sm"
-          alt="SpendSense"
+          alt="SpendSense logo"
+          className="ss-topbar-logo"
           style={{
-            borderRadius: 14,
-            background: "color-mix(in srgb, var(--ss-card-bg) 45%, transparent)",
-            border: "1px solid var(--ss-border-color)",
+            borderRadius: 16,
           }}
         />
 
-        <div style={{ minWidth: 0 }}>
+        <div className="ss-topbar-titles" style={{ minWidth: 0 }}>
           <div className="ss-topbar-title">{title}</div>
           <div className="ss-topbar-subtitle">Modern fintech UI</div>
         </div>

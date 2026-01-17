@@ -227,14 +227,9 @@ a {
   margin-bottom: 12px;
 }
 
+/* Legacy placeholder mark (replaced by AppLogo). Keep hidden so it can't cause layout shifts if referenced elsewhere. */
 .ss-brand-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--ss-primary-2), var(--ss-primary));
-  box-shadow: var(--ss-shadow-sm);
-  position: relative;
-  overflow: hidden;
+  display: none;
 }
 
 .ss-brand-mark::after {
@@ -1331,5 +1326,8 @@ a {
   }
   .ss-topbar {
     padding: 0 var(--ss-space-3);
+  }
+  .ss-topbar-subtitle {
+    display: none;
   }
 }
