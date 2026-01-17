@@ -15,13 +15,14 @@ const severityTone = {
 export default function AlertsPage() {
   /** Alerts management: list, filters, and dismiss actions (demo-derived). This is the only page that manages alerts. */
   const { prefs } = usePreferences();
-  const { alerts: ctxAlerts, loadingData, dataError, seedingState, refreshAlerts } = useAppData();
+  const { alerts: ctxAlerts, loadingData, dataError, seedingState, refreshAlerts, dismissAlert } = useAppData();
 
   const isLoading = Boolean(loadingData);
 
   // Context already applies safe fallback (derived from demo transactions) when needed.
   const derived = useMemo(() => (Array.isArray(ctxAlerts) ? ctxAlerts : []), [ctxAlerts]);
 
+  // Local-only dismiss is still useful in demo mode (no DB), but in Live mode we persist to Supabase.
   const [dismissed, setDismissed] = useState(() => new Set());
   const [severity, setSeverity] = useState("All");
   const [status, setStatus] = useState("All");
@@ -39,12 +40,20 @@ export default function AlertsPage() {
     [derived, dismissed]
   );
 
-  const dismiss = (id) => {
+  const dismiss = async (id) => {
+    // Always update local state for instant feedback.
     setDismissed((prev) => {
       const next = new Set(prev);
       next.add(id);
       return next;
     });
+
+    // Persist in Live mode; in demo mode this will fail, which is okay (UI already updated).
+    const res = await dismissAlert(id);
+    if (!res?.ok) {
+      // eslint-disable-next-line no-console
+      console.warn("[alerts] Failed to dismiss alert in DB (non-fatal):", res?.error?.message || res?.error);
+    }
   };
 
   const resetFilters = () => {

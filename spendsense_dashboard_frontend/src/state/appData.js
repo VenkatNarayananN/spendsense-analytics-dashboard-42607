@@ -4,6 +4,12 @@ import { seedDemoDataIfEmpty, fetchAlertsForUi, fetchTransactionsForUi } from ".
 import { useAuth } from "../auth/AuthProvider";
 import { generateDemoTransactions, deriveAlerts as deriveAlertsFromTransactions } from "../mock/demoData";
 import { usePreferences } from "./preferences";
+import {
+  subscribeToAlertsRealtime,
+  subscribeToTransactionsRealtime,
+  unsubscribeRealtimeChannel,
+} from "../lib/realtimeService";
+import { createTransaction as createTransactionDb, dismissAlert as dismissAlertDb } from "../lib/transactionsAlertsService";
 
 /**
  * AppDataContext:
@@ -136,6 +142,79 @@ export function AppDataProvider({ children }) {
     await loadAll({ attemptSeed: false });
   }, [loadAll]);
 
+  const createTransaction = useCallback(
+    async (input) => {
+      if (!supabaseConfigured || !isAuthenticated || !userId) {
+        return { ok: false, error: new Error("Not authenticated or Supabase not configured") };
+      }
+      const res = await createTransactionDb(userId, input);
+      if (!res.ok) return res;
+
+      // Optimistic local update (realtime will also deliver it; we keep this to feel instant).
+      setTransactions((prev) => {
+        const next = Array.isArray(prev) ? [...prev] : [];
+        const row = res.transaction;
+        next.unshift({
+          id: row.id,
+          date: row.transaction_date,
+          merchant: row.merchant,
+          category: row.category,
+          amount: Number(row.amount ?? 0),
+          currency: row.currency || "USD",
+          status: row.status || "posted",
+        });
+        return next;
+      });
+
+      return res;
+    },
+    [isAuthenticated, supabaseConfigured, userId]
+  );
+
+  const dismissAlert = useCallback(
+    async (alertId) => {
+      if (!supabaseConfigured || !isAuthenticated || !userId) {
+        return { ok: false, error: new Error("Not authenticated or Supabase not configured") };
+      }
+      const res = await dismissAlertDb(userId, alertId);
+      if (!res.ok) return res;
+
+      // Optimistic local update; realtime will reconcile too.
+      setAlerts((prev) => (Array.isArray(prev) ? prev.map((a) => (a.id === alertId ? { ...a, status: "resolved", is_read: true } : a)) : prev));
+
+      return res;
+    },
+    [isAuthenticated, supabaseConfigured, userId]
+  );
+
+  // Realtime subscriptions: keep lists in sync while the user is authenticated.
+  useEffect(() => {
+    if (!supabaseConfigured || !isAuthenticated || !userId) return () => {};
+
+    let txChannel = null;
+    let alertChannel = null;
+    let cancelled = false;
+
+    const txSub = subscribeToTransactionsRealtime(userId, () => {
+      // Debounced by nature of the refresh call; simplest reliable approach is to re-fetch.
+      if (cancelled) return;
+      refreshTransactions();
+    });
+    if (txSub.ok) txChannel = txSub.channel;
+
+    const alSub = subscribeToAlertsRealtime(userId, () => {
+      if (cancelled) return;
+      refreshAlerts();
+    });
+    if (alSub.ok) alertChannel = alSub.channel;
+
+    return () => {
+      cancelled = true;
+      unsubscribeRealtimeChannel(txChannel);
+      unsubscribeRealtimeChannel(alertChannel);
+    };
+  }, [isAuthenticated, refreshAlerts, refreshTransactions, supabaseConfigured, userId]);
+
   const value = useMemo(
     () => ({
       transactions,
@@ -146,8 +225,21 @@ export function AppDataProvider({ children }) {
       refreshTransactions,
       refreshAlerts,
       refreshAll,
+      createTransaction,
+      dismissAlert,
     }),
-    [alerts, dataError, loadingData, refreshAlerts, refreshAll, refreshTransactions, seedingState, transactions]
+    [
+      alerts,
+      dataError,
+      loadingData,
+      refreshAlerts,
+      refreshAll,
+      refreshTransactions,
+      seedingState,
+      transactions,
+      createTransaction,
+      dismissAlert,
+    ]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

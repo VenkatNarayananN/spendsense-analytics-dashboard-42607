@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
-import { Button, Chip, PageHeader } from "../components/ui";
+import { Button, Card, Chip, PageHeader } from "../components/ui";
 import { IconSearch } from "../components/icons";
 import { EmptyState, FilterBar } from "../components/ux";
 import { parsers, useDebouncedValue, useURLQueryState } from "../components/urlState";
@@ -24,7 +24,22 @@ function clampAmountString(v) {
 export default function TransactionsPage() {
   /** Searchable + filterable transactions table with realistic demo data and URL-synced filters. */
   const { prefs } = usePreferences();
-  const { transactions: ctxTransactions, loadingData, dataError, seedingState, refreshTransactions } = useAppData();
+  const { transactions: ctxTransactions, loadingData, dataError, seedingState, refreshTransactions, createTransaction } = useAppData();
+
+  const [newTx, setNewTx] = useState(() => ({
+    date: new Date().toISOString().slice(0, 10),
+    merchant: "",
+    category: "",
+    amount: "",
+    currency: prefs.currency || "USD",
+  }));
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  useEffect(() => {
+    // Keep currency aligned with preferences unless user already typed one.
+    setNewTx((p) => ({ ...p, currency: p.currency || prefs.currency || "USD" }));
+  }, [prefs.currency]);
 
   // URL-synced filters
   const [filters, setFilters, resetFilters] = useURLQueryState({
@@ -199,6 +214,139 @@ export default function TransactionsPage() {
           </>
         }
       />
+
+      <div style={{ height: 12 }} />
+
+      <div className="ss-grid ss-grid-2" style={{ alignItems: "start" }}>
+        <Card title="New transaction" caption="Add a transaction (saved to Supabase when Live).">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setCreateError("");
+              if (!newTx.merchant.trim() || !newTx.category.trim() || !String(newTx.amount).trim()) {
+                setCreateError("Merchant, category, and amount are required.");
+                return;
+              }
+
+              setCreating(true);
+              try {
+                const res = await createTransaction({
+                  date: newTx.date,
+                  merchant: newTx.merchant,
+                  category: newTx.category,
+                  amount: newTx.amount,
+                  currency: newTx.currency,
+                });
+                if (!res?.ok) {
+                  setCreateError(res?.error?.message || "Failed to create transaction.");
+                  return;
+                }
+                setNewTx((p) => ({ ...p, merchant: "", category: "", amount: "" }));
+              } finally {
+                setCreating(false);
+              }
+            }}
+            style={{ display: "grid", gap: 10 }}
+          >
+            <label className="ss-muted" style={{ fontSize: 12 }}>
+              Date
+              <input
+                className="ss-input"
+                type="date"
+                value={newTx.date}
+                onChange={(e) => setNewTx((p) => ({ ...p, date: e.target.value }))}
+                aria-label="New transaction date"
+                disabled={creating}
+              />
+            </label>
+
+            <label className="ss-muted" style={{ fontSize: 12 }}>
+              Merchant
+              <input
+                className="ss-input"
+                value={newTx.merchant}
+                onChange={(e) => setNewTx((p) => ({ ...p, merchant: e.target.value }))}
+                placeholder="e.g., Blue Bottle Coffee"
+                aria-label="New transaction merchant"
+                disabled={creating}
+              />
+            </label>
+
+            <label className="ss-muted" style={{ fontSize: 12 }}>
+              Category
+              <input
+                className="ss-input"
+                value={newTx.category}
+                onChange={(e) => setNewTx((p) => ({ ...p, category: e.target.value }))}
+                placeholder="e.g., Dining"
+                aria-label="New transaction category"
+                disabled={creating}
+              />
+            </label>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <label className="ss-muted" style={{ fontSize: 12 }}>
+                Amount
+                <input
+                  className="ss-input"
+                  inputMode="decimal"
+                  value={newTx.amount}
+                  onChange={(e) => setNewTx((p) => ({ ...p, amount: e.target.value }))}
+                  placeholder="0.00"
+                  aria-label="New transaction amount"
+                  disabled={creating}
+                />
+              </label>
+
+              <label className="ss-muted" style={{ fontSize: 12 }}>
+                Currency
+                <input
+                  className="ss-input"
+                  value={newTx.currency}
+                  onChange={(e) => setNewTx((p) => ({ ...p, currency: e.target.value }))}
+                  placeholder="USD"
+                  aria-label="New transaction currency"
+                  disabled={creating}
+                />
+              </label>
+            </div>
+
+            {createError ? (
+              <div className="ss-card-caption" style={{ color: "var(--ss-error)" }}>
+                {createError}
+              </div>
+            ) : prefs.demoMode ? (
+              <div className="ss-card-caption">
+                You are in demo mode. Creating transactions requires Supabase “Live” configuration + login.
+              </div>
+            ) : null}
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Saving…" : "Save transaction"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setNewTx((p) => ({ ...p, merchant: "", category: "", amount: "" }))}
+                disabled={creating}
+              >
+                Clear
+              </Button>
+            </div>
+          </form>
+        </Card>
+
+        <Card title="Tips" caption="Make the most of your data">
+          <div className="ss-muted" style={{ fontSize: 13, lineHeight: 1.65 }}>
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <li>New transactions appear instantly (optimistic UI) and stay synced via realtime.</li>
+              <li>Use filters to share a view (they persist in the URL).</li>
+              <li>In Live mode, ensure your Supabase RLS policies allow insert/select on your own rows.</li>
+            </ul>
+          </div>
+        </Card>
+      </div>
 
       <div style={{ height: 12 }} />
 
