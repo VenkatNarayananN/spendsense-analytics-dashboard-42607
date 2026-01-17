@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Button } from "./ui";
 
 /**
@@ -88,87 +88,37 @@ export function FilterBar({
   title = "Filters",
   left,
   right,
-  mobileDrawerContent,
+  mobileDrawerContent, // kept for backwards compatibility; no longer used
   onReset,
   onApply,
   applyLabel = "Apply",
   resetLabel = "Reset",
 }) {
   /**
-   * Consistent filter container.
-   * - On desktop: renders left+right inline.
-   * - On mobile: right side collapses into a drawer (use mobileDrawerContent).
+   * Consistent filter container (simplified).
+   * - Renders left+right inline.
+   * - Does NOT render the legacy mobile drawer (which was showing an extra "Close/Reset" helper block).
    */
-  const [drawerOpen, setDrawerOpen] = useState(false);
-
   return (
-    <>
-      <div className="ss-filterbar" role="region" aria-label="Filters">
-        <div className="ss-filterbar-inner">
-          <div className="ss-filterbar-left">
-            <Button
-              variant="ghost"
-              className="ss-filter-drawer-toggle"
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Open filters"
-              type="button"
-            >
-              Filters
+    <div className="ss-filterbar" role="region" aria-label="Filters">
+      <div className="ss-filterbar-inner">
+        <div className="ss-filterbar-left">{left}</div>
+
+        <div className="ss-filterbar-right">{right}</div>
+
+        <div className="ss-filterbar-actions">
+          {onReset ? (
+            <Button variant="ghost" onClick={onReset} aria-label="Reset filters" type="button">
+              {resetLabel}
             </Button>
-            {left}
-          </div>
-
-          <div className="ss-filterbar-right">{right}</div>
-
-          <div className="ss-filterbar-actions">
-            {onReset ? (
-              <Button variant="ghost" onClick={onReset} aria-label="Reset filters" type="button">
-                {resetLabel}
-              </Button>
-            ) : null}
-            {onApply ? (
-              <Button variant="secondary" onClick={onApply} aria-label="Apply filters" type="button">
-                {applyLabel}
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
+          {onApply ? (
+            <Button variant="secondary" onClick={onApply} aria-label="Apply filters" type="button">
+              {applyLabel}
+            </Button>
+          ) : null}
         </div>
       </div>
-
-      {/* Mobile drawer */}
-      <div className={`ss-filter-drawer ${drawerOpen ? "is-open" : ""}`} role="dialog" aria-label={`${title} drawer`}>
-        <div className="ss-filter-drawer-panel">
-          <h3>{title}</h3>
-
-          <div className="ss-filter-drawer-grid">{mobileDrawerContent || right}</div>
-
-          <div className="ss-filter-drawer-footer">
-            <Button variant="ghost" onClick={() => setDrawerOpen(false)} aria-label="Close filters" type="button">
-              Close
-            </Button>
-            <div style={{ display: "flex", gap: 10 }}>
-              {onReset ? (
-                <Button variant="ghost" onClick={onReset} aria-label="Reset filters (drawer)" type="button">
-                  {resetLabel}
-                </Button>
-              ) : null}
-              {onApply ? (
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    onApply();
-                    setDrawerOpen(false);
-                  }}
-                  aria-label="Apply filters (drawer)"
-                  type="button"
-                >
-                  {applyLabel}
-                </Button>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
