@@ -9,11 +9,7 @@
  * If not set, we fall back to relative requests (useful in same-origin deployments).
  */
 
-function getBackendBaseUrl() {
-  const raw = process.env.REACT_APP_BACKEND_URL;
-  if (!raw) return "";
-  return String(raw).replace(/\/+$/, "");
-}
+import { getBackendBaseUrl } from "./runtimeConfig";
 
 // PUBLIC_INTERFACE
 export async function fetchLatestFxRates({ base = "USD" } = {}) {
